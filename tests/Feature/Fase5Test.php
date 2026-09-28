@@ -105,7 +105,7 @@ class Fase5Test extends TestCase
     {
         $evento = $this->evento(Evento::CAPACITACION, ['para_todos' => false]); // sin destinatarios
         $visitante = $this->contacto(Contacto::CLIENTE, ['nombres' => 'Pedro']);
-        $otraSede = $this->contacto(Contacto::CLIENTE, ['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
+        $otraSede = $this->contacto(Contacto::CLIENTE, ['sede_id' => Sede::where('nombre', 'Chiquimula')->value('id')]);
 
         $this->actingAs($this->admin)->getJson(route('asistencia.buscar', ['capacitaciones', $evento, 'q' => 'Pedro']))
             ->assertOk()->assertJsonFragment(['id' => $visitante->id]);
@@ -242,7 +242,7 @@ class Fase5Test extends TestCase
         $this->actingAs($secretaria)->get(route('reportes.eventos'))->assertOk();
         $this->actingAs($secretaria)->get(route('reportes.eventos.excel'))->assertForbidden();
 
-        $directorCoban = User::factory()->create(['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
+        $directorCoban = User::factory()->create(['sede_id' => Sede::where('nombre', 'Chiquimula')->value('id')]);
         $directorCoban->assignRole('Director de sede');
         $this->actingAs($directorCoban)->get(route('asistencia.show', ['capacitaciones', $evento]))->assertForbidden();
         $this->actingAs($directorCoban)->get(route('reportes.eventos'))->assertOk()->assertDontSee('Reunión general');

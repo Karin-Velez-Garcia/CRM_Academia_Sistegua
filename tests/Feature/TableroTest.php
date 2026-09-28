@@ -23,7 +23,7 @@ class TableroTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole(User::ROL_ADMINISTRADOR);
         $guatemala = Sede::where('nombre', 'Ciudad de Guatemala')->firstOrFail();
-        $escuintla = Sede::where('nombre', 'Escuintla')->firstOrFail();
+        $chiquimula = Sede::where('nombre', 'Chiquimula')->firstOrFail();
 
         // Evento realizado hace 10 días con 4 invitados: 3 confirmaron, 2 asistieron
         $realizado = Evento::create(['tipo' => 'capacitacion', 'titulo' => 'Capacitación pasada', 'sede_id' => $guatemala->id, 'modalidad' => 'presencial',
@@ -33,10 +33,10 @@ class TableroTest extends TestCase
             Invitacion::create(['evento_id' => $realizado->id, 'contacto_id' => $c->id, 'correo' => $c->correo,
                 'estado_envio' => 'enviada', 'respuesta' => $r, 'asistio' => $a]);
         }
-        Contacto::create(['tipo' => 'cliente', 'sede_id' => $escuintla->id, 'nombres' => 'D', 'apellidos' => 'Y', 'correo' => null]);
+        Contacto::create(['tipo' => 'cliente', 'sede_id' => $chiquimula->id, 'nombres' => 'D', 'apellidos' => 'Y', 'correo' => null]);
 
         // Evento en 3 días sin invitaciones
-        Evento::create(['tipo' => 'capacitacion', 'titulo' => 'Taller próximo', 'sede_id' => $escuintla->id, 'modalidad' => 'virtual',
+        Evento::create(['tipo' => 'capacitacion', 'titulo' => 'Taller próximo', 'sede_id' => $chiquimula->id, 'modalidad' => 'virtual',
             'enlace' => 'https://meet.google.com/x', 'para_todos' => true, 'inicio' => now()->addDays(3), 'fin' => now()->addDays(3)->addHours(2)]);
 
         $resp = $this->actingAs($admin)->get(route('dashboard'));
@@ -58,12 +58,12 @@ class TableroTest extends TestCase
         $this->assertStringContainsString('1 contacto sin correo', $avisos);
         $this->assertStringContainsString('Sedes sin dirección', $avisos);
 
-        // Filtro por sede: Cobán no tiene eventos realizados
-        $this->actingAs($admin)->get(route('dashboard', ['sede' => $escuintla->id]))->assertOk()
+        // Filtro por sede: Chiquimula no tiene eventos realizados
+        $this->actingAs($admin)->get(route('dashboard', ['sede' => $chiquimula->id]))->assertOk()
             ->assertSee('Todavía no hay eventos realizados en este período');
 
-        // Un usuario limitado a Escuintla ve solo su sede
-        $dir = User::factory()->create(['sede_id' => $escuintla->id]);
+        // Un usuario limitado a Chiquimula ve solo su sede
+        $dir = User::factory()->create(['sede_id' => $chiquimula->id]);
         $dir->assignRole('Director de sede');
         $this->assertSame(1, $this->actingAs($dir)->get(route('dashboard'))->viewData('kpi')['clientes']);
     }

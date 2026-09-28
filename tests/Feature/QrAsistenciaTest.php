@@ -88,7 +88,7 @@ class QrAsistenciaTest extends TestCase
         $this->get(route('registro.show', $this->evento->token_registro))->assertSee('Ya estaba registrado(a)');
 
         // No encontrado u otra sede
-        $otra = $this->contacto(['correo' => 'otra@correo.com', 'sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
+        $otra = $this->contacto(['correo' => 'otra@correo.com', 'sede_id' => Sede::where('nombre', 'Chiquimula')->value('id')]);
         $this->post($url, ['identificador' => 'otra@correo.com'])->assertSessionHas('error', fn ($m) => str_contains($m, 'mesa de registro'));
         $this->post($url, ['identificador' => 'nadie@correo.com'])->assertSessionHas('error');
         $this->assertNull(Invitacion::where('contacto_id', $otra->id)->first());
@@ -132,7 +132,7 @@ class QrAsistenciaTest extends TestCase
         $this->actingAs($this->admin)->get($inv->urlEscaneo())->assertSee('Ya estaba registrado(a)');
 
         // Secretaría de otra sede no puede
-        $otro = User::factory()->create(['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
+        $otro = User::factory()->create(['sede_id' => Sede::where('nombre', 'Chiquimula')->value('id')]);
         $otro->assignRole('Secretaría');
         $this->actingAs($otro)->get($inv->urlEscaneo())->assertForbidden();
     }

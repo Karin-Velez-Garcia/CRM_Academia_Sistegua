@@ -5,7 +5,7 @@ return [
     'nombre' => env('APP_NAME', 'Academia Sistegua'),
     'siglas' => 'AS',
     'lema' => 'Capacitación técnica en sistemas de construcción liviana',
-    'sedes' => ['Ciudad de Guatemala', 'Quetzaltenango', 'Escuintla'],
+    'sedes' => ['Ciudad de Guatemala', 'Quetzaltenango', 'Chiquimula'],
 
     // Recordatorio automático antes de cada capacitación (se puede apagar por evento)
     'recordatorio' => [

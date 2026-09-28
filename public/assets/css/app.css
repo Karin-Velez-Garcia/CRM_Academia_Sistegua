@@ -1,41 +1,52 @@
 /* Ajustes propios sobre la plantilla (sin el JavaScript de la plantilla original) */
 
-/* Paleta institucional: azul marino + dorado (acento ya presente en --bs-warning) */
+/* Paleta de marca Sistegua: rojo #D62228, gris #6D6D6D y gris oscuro #2D2D2D */
 :root, [data-bs-theme="light"] {
-    --bs-primary: #1E3A70;
-    --bs-primary-active: #142850;
-    --bs-primary-light: #E8EDF6;
-    --bs-primary-rgb: 30, 58, 112;
-    --bs-link-color: #1E3A70;
-    --bs-link-color-rgb: 30, 58, 112;
-    --bs-link-hover-color: #142850;
-    --bs-link-hover-color-rgb: 20, 40, 80;
+    --bs-primary: #D62228;
+    --bs-primary-active: #B01B20;
+    --bs-primary-light: #FBE9EA;
+    --bs-primary-rgb: 214, 34, 40;
+    --bs-primary-clarity: rgba(214, 34, 40, 0.2);
+    --bs-primary-bg-subtle: #F7D3D4;
+    --bs-primary-border-subtle: #EFA7A9;
+    --bs-primary-text-emphasis: #560E10;
+    --bs-link-color: #D62228;
+    --bs-link-color-rgb: 214, 34, 40;
+    --bs-link-hover-color: #B01B20;
+    --bs-link-hover-color-rgb: 176, 27, 32;
 }
 [data-bs-theme="dark"] {
-    --bs-primary: #5578B8;
-    --bs-primary-active: #7291CC;
-    --bs-primary-light: #1B2740;
-    --bs-primary-rgb: 85, 120, 184;
-    --bs-link-color: #7291CC;
-    --bs-link-color-rgb: 114, 145, 204;
-    --bs-link-hover-color: #93ABDA;
-    --bs-link-hover-color-rgb: 147, 171, 218;
+    --bs-primary: #E5383E;
+    --bs-primary-active: #EC5F64;
+    --bs-primary-light: #34191A;
+    --bs-primary-rgb: 229, 56, 62;
+    --bs-primary-clarity: rgba(229, 56, 62, 0.2);
+    --bs-primary-bg-subtle: #2B0E0F;
+    --bs-primary-border-subtle: #80181C;
+    --bs-primary-text-emphasis: #EF8A8D;
+    --bs-link-color: #EC5F64;
+    --bs-link-color-rgb: 236, 95, 100;
+    --bs-link-hover-color: #F28A8E;
+    --bs-link-hover-color-rgb: 242, 138, 142;
 }
 
 /* El fondo del menú lateral viene codificado en color fijo (#0d0e12) dentro de
    style.bundle.css, con más especificidad que una regla de :root; se usa el id del
-   contenedor (#kt_app_sidebar) para poder pintarlo de azul marino sin !important. */
-#kt_app_sidebar { background-color: #1E3A70; }
+   contenedor (#kt_app_sidebar) para pintarlo con el gris oscuro de la marca sin !important. */
+#kt_app_sidebar { background-color: #2D2D2D; }
+#kt_app_sidebar .menu-link.active { background-color: #D62228; }
+#kt_app_sidebar .menu-link.active .menu-title,
+#kt_app_sidebar .menu-link.active .menu-icon i { color: #FFFFFF; }
 #kt_app_sidebar .menu-item.here > .menu-link,
 #kt_app_sidebar .menu-item.here > .menu-link .menu-title,
 #kt_app_sidebar .menu-item.here > .menu-link .menu-icon,
 #kt_app_sidebar .menu-item.here > .menu-link .menu-icon i,
 #kt_app_sidebar .menu-item.here > .menu-link .menu-icon .svg-icon {
-    color: #F6C000;
+    color: #FFFFFF;
 }
 
-/* Acento dorado bajo el logo del menú lateral, como en la identidad institucional */
-.app-sidebar-logo { border-bottom: 3px solid var(--bs-warning); }
+/* Acento rojo bajo el logo del menú lateral, como en la identidad de la marca */
+.app-sidebar-logo { border-bottom: 3px solid #D62228; }
 
 .sidebar-scroll { max-height: calc(100vh - 110px); overflow-y: auto; scrollbar-width: thin; }
 .app-sidebar .menu-link.disabled { cursor: default; pointer-events: none; }
@@ -73,11 +84,58 @@
 .tabla-permisos .form-check { justify-content: center; display: flex; }
 
 /* Pantalla de acceso */
-.auth-aside { background-size: cover; background-position: center; }
+.auth-aside {
+    position: relative; overflow: hidden;
+    background: radial-gradient(circle at 25% 20%, #3A3A3A 0%, #2D2D2D 45%, #1E1E1E 100%);
+}
+.auth-contenido { position: relative; z-index: 1; }
+.auth-fondo { position: absolute; inset: 0; pointer-events: none; }
+/* Cuadrícula tenue que se desvanece hacia los bordes */
+.auth-fondo::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .045) 1px, transparent 1px);
+    background-size: 48px 48px;
+    -webkit-mask-image: radial-gradient(circle at center, #000 30%, transparent 75%);
+    mask-image: radial-gradient(circle at center, #000 30%, transparent 75%);
+}
+/* Resplandor rojo que se desplaza despacio detrás del contenido */
+.auth-brillo {
+    position: absolute; width: 520px; height: 520px; left: 50%; top: 50%;
+    margin: -260px 0 0 -260px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(214, 34, 40, .45) 0%, rgba(214, 34, 40, 0) 70%);
+    animation: auth-brillo 16s ease-in-out infinite alternate;
+}
+/* Figuras con las esquinas redondeadas del marco del logo */
+.auth-fondo .figura {
+    position: absolute; border-radius: 22%;
+    animation: auth-flotar var(--dur, 20s) ease-in-out infinite alternate;
+    animation-delay: var(--delay, 0s);
+}
+.figura.f1 { width: 220px; height: 220px; top: -60px;  left: -50px;  border: 3px solid rgba(214, 34, 40, .7);  --r: 12deg;  --dx: 30px;  --dy: 40px;  --dur: 22s; }
+.figura.f2 { width: 140px; height: 140px; top: 12%;    right: 8%;    background: rgba(214, 34, 40, .22);       --r: -18deg; --dx: -25px; --dy: 35px;  --dur: 18s; --delay: -4s; }
+.figura.f3 { width: 70px;  height: 70px;  top: 42%;    left: 10%;    border: 2px solid rgba(109, 109, 109, .8); --r: 30deg;  --dx: 20px;  --dy: -30px; --dur: 14s; --delay: -2s; }
+.figura.f4 { width: 300px; height: 300px; bottom: -110px; right: -80px; border: 3px solid rgba(214, 34, 40, .5); --r: -10deg; --dx: -35px; --dy: -25px; --dur: 26s; --delay: -8s; }
+.figura.f5 { width: 90px;  height: 90px;  bottom: 16%;  left: 22%;   background: rgba(109, 109, 109, .25);     --r: 45deg;  --dx: 25px;  --dy: 20px;  --dur: 17s; --delay: -6s; }
+.figura.f6 { width: 46px;  height: 46px;  top: 24%;    left: 38%;    background: rgba(214, 34, 40, .55);       --r: 20deg;  --dx: -15px; --dy: 25px;  --dur: 12s; --delay: -3s; }
+.figura.f7 { width: 110px; height: 110px; bottom: 8%;  right: 30%;   border: 2px solid rgba(255, 255, 255, .12); --r: -30deg; --dx: 20px; --dy: -35px; --dur: 20s; --delay: -10s; }
+@keyframes auth-flotar {
+    from { transform: translate(0, 0) rotate(var(--r, 0deg)); }
+    to   { transform: translate(var(--dx, 0), var(--dy, 0)) rotate(calc(var(--r, 0deg) + 25deg)); }
+}
+@keyframes auth-brillo {
+    0%   { transform: translate(-30%, -25%) scale(.9); }
+    50%  { transform: translate(25%, 10%) scale(1.1); }
+    100% { transform: translate(-10%, 30%) scale(.95); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .auth-brillo, .auth-fondo .figura { animation: none; }
+}
 
 /* Logo de la academia */
-.logo-login { height: 150px; width: auto; display: block; }
-@media (max-width: 991.98px) { .logo-login { height: 100px; } }
+.logo-login { width: 360px; max-width: 100%; height: auto; display: block; }
+@media (max-width: 991.98px) { .logo-login { width: 240px; } }
 
 /* Lista de eventos */
 .evento-fila { color: inherit; transition: background-color .15s; }

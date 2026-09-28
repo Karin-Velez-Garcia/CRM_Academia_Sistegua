@@ -11,7 +11,7 @@ organizar y controlar las **capacitaciones a clientes** (instaladores, contratis
 ferreterías, arquitectos), desde la **invitación por correo** hasta la **asistencia** y la
 **entrega del certificado**.
 
-Sedes de demostración: **Ciudad de Guatemala**, **Quetzaltenango** y **Escuintla**
+Sedes de demostración: **Ciudad de Guatemala**, **Quetzaltenango** y **Chiquimula**
 (ajustar a las sucursales reales antes de producción).
 
 ## 2. Tecnología y cómo levantarlo

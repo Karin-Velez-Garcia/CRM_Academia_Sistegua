@@ -34,7 +34,7 @@ class LoginController extends Controller
             ]);
         }
 
-        if (! Auth::attempt($credenciales + ['activo' => true], $request->boolean('recordar'))) {
+        if (! Auth::attempt($credenciales + ['activo' => true])) {
             RateLimiter::hit($llave, 60);
             throw ValidationException::withMessages([
                 'email' => 'El correo o la contraseña no son correctos, o el usuario está desactivado.',

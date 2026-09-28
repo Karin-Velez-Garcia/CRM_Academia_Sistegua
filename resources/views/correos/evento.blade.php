@@ -25,7 +25,7 @@
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px; background:#ffffff; border-radius:12px; overflow:hidden;">
                 {{-- Encabezado --}}
                 <tr>
-                    <td style="background:#1b84ff; padding:20px 28px;">
+                    <td style="background:#d62228; padding:20px 28px;">
                         <table role="presentation" cellspacing="0" cellpadding="0">
                             <tr>
                                 <td style="background:#ffffff; border-radius:8px; padding:4px;">
@@ -43,7 +43,7 @@
                 <tr>
                     <td style="padding:28px;">
                         <div style="display:inline-block; font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:.5px;
-                                    color:{{ $cancelado ? '#f8285a' : '#1b84ff' }}; background:{{ $cancelado ? '#ffeef3' : '#e9f3ff' }};
+                                    color:{{ $cancelado ? '#f8285a' : '#d62228' }}; background:{{ $cancelado ? '#ffeef3' : '#fbe9ea' }};
                                     padding:4px 10px; border-radius:6px; margin-bottom:14px;">{{ $etiqueta }}</div>
                         <h1 style="margin:0 0 18px; font-size:22px; line-height:1.3; color:#071437; {{ $cancelado ? 'text-decoration:line-through;' : '' }}">{{ $evento->titulo }}</h1>
 
@@ -62,7 +62,7 @@
                                     @if ($evento->es_virtual)
                                         <div style="font-size:12px; color:#99a1b7; text-transform:uppercase; font-weight:bold;">Modalidad virtual · {{ $evento->plataforma }}</div>
                                         @unless ($cancelado)
-                                            <div style="font-size:15px; margin-top:2px;"><a href="{{ $evento->enlace }}" style="color:#1b84ff; word-break:break-all;">{{ $evento->enlace }}</a></div>
+                                            <div style="font-size:15px; margin-top:2px;"><a href="{{ $evento->enlace }}" style="color:#d62228; word-break:break-all;">{{ $evento->enlace }}</a></div>
                                         @endunless
                                     @else
                                         <div style="font-size:12px; color:#99a1b7; text-transform:uppercase; font-weight:bold;">Lugar</div>

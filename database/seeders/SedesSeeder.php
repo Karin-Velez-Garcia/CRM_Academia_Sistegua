@@ -17,7 +17,7 @@ class SedesSeeder extends Seeder
         foreach ([
             'Ciudad de Guatemala' => '0101', // Guatemala, Guatemala
             'Quetzaltenango' => '0901',      // Quetzaltenango, Quetzaltenango
-            'Escuintla' => '0501',           // Escuintla, Escuintla
+            'Chiquimula' => '2001',          // Chiquimula, Chiquimula
         ] as $nombre => $codigo) {
             Sede::firstOrCreate(
                 ['nombre' => $nombre],

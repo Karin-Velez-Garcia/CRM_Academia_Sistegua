@@ -95,17 +95,17 @@ class PlantillaCertificado extends Model
     public static function disenoInicial(): array
     {
         return [
-            ['id' => 'marco', 'tipo' => 'marco', 'x' => 3, 'y' => 4, 'ancho' => 94, 'alto' => 92, 'color' => '#1E3A70', 'grosor' => 3],
-            ['id' => 'franja', 'tipo' => 'linea', 'x' => 5, 'y' => 7, 'ancho' => 90, 'color' => '#F6C000', 'grosor' => 6],
-            ['id' => 'logo', 'tipo' => 'imagen', 'src' => 'logo', 'x' => 42, 'y' => 11, 'ancho' => 16],
+            ['id' => 'marco', 'tipo' => 'marco', 'x' => 3, 'y' => 4, 'ancho' => 94, 'alto' => 92, 'color' => '#D62228', 'grosor' => 3],
+            ['id' => 'franja', 'tipo' => 'linea', 'x' => 5, 'y' => 7, 'ancho' => 90, 'color' => '#6D6D6D', 'grosor' => 6],
+            ['id' => 'logo', 'tipo' => 'imagen', 'src' => 'logo', 'x' => 35, 'y' => 10, 'ancho' => 30],
             ['id' => 'academia', 'tipo' => 'texto', 'texto' => '{academia} · Sede {sede}', 'x' => 15, 'y' => 30, 'ancho' => 70,
                 'fuente' => 12, 'color' => '#78829D', 'alineacion' => 'center', 'mayusculas' => true, 'negrita' => false],
             ['id' => 'titulo', 'tipo' => 'texto', 'texto' => 'CONSTANCIA DE PARTICIPACIÓN', 'x' => 10, 'y' => 35, 'ancho' => 80,
-                'fuente' => 30, 'color' => '#071437', 'alineacion' => 'center', 'negrita' => true],
+                'fuente' => 30, 'color' => '#2D2D2D', 'alineacion' => 'center', 'negrita' => true],
             ['id' => 'otorga', 'tipo' => 'texto', 'texto' => 'Se otorga la presente a', 'x' => 20, 'y' => 45, 'ancho' => 60,
                 'fuente' => 13, 'color' => '#78829D', 'alineacion' => 'center'],
             ['id' => 'nombre', 'tipo' => 'texto', 'texto' => '{nombre}', 'x' => 15, 'y' => 50, 'ancho' => 70,
-                'fuente' => 26, 'color' => '#1E3A70', 'alineacion' => 'center', 'negrita' => true],
+                'fuente' => 26, 'color' => '#D62228', 'alineacion' => 'center', 'negrita' => true],
             ['id' => 'subrayado', 'tipo' => 'linea', 'x' => 25, 'y' => 58, 'ancho' => 50, 'color' => '#DBDFE9', 'grosor' => 1],
             ['id' => 'texto', 'tipo' => 'texto',
                 'texto' => 'por su participación en la capacitación "{curso}", realizada el {fecha} en {lugar}, con una duración de {duracion}.',
@@ -166,7 +166,7 @@ class PlantillaCertificado extends Model
             } else { // marco
                 $limpio += [
                     'alto' => self::numero($el['alto'] ?? 90, 1, 120),
-                    'color' => self::color($el['color'] ?? '#1E3A70'),
+                    'color' => self::color($el['color'] ?? '#D62228'),
                     'grosor' => (int) self::numero($el['grosor'] ?? 2, 1, 20),
                 ];
             }

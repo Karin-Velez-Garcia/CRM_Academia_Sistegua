@@ -10,7 +10,7 @@
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:24px 12px;">
     <tr><td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px; background:#fff; border-radius:12px; overflow:hidden;">
-            <tr><td style="background:#1b84ff; padding:20px 28px; color:#fff;">
+            <tr><td style="background:#d62228; padding:20px 28px; color:#fff;">
                 <table role="presentation" cellspacing="0" cellpadding="0"><tr>
                     <td style="background:#fff; border-radius:8px; padding:4px;"><img src="{{ $logo }}" width="44" height="44" alt="" style="display:block;"></td>
                     <td style="padding-left:14px;"><div style="font-size:18px; font-weight:bold;">{{ config('academia.nombre') }}</div>
@@ -22,7 +22,7 @@
                 <p>Gracias por participar en la capacitación <strong style="color:#071437;">"{{ $evento->titulo }}"</strong>
                     del {{ $evento->inicio->translatedFormat('j \d\e F \d\e Y') }}. Adjuntamos su constancia de participación en PDF.</p>
                 <p style="font-size:13px; color:#99a1b7;">Código de verificación: <strong>{{ $codigo }}</strong> —
-                    <a href="{{ route('constancia.verificar', $codigo) }}" style="color:#1b84ff;">verificar constancia</a></p>
+                    <a href="{{ route('constancia.verificar', $codigo) }}" style="color:#d62228;">verificar constancia</a></p>
             </td></tr>
         </table>
     </td></tr>

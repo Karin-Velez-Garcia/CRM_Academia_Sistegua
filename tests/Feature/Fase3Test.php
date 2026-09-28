@@ -18,7 +18,7 @@ class Fase3Test extends TestCase
     use RefreshDatabase;
 
     private Sede $guatemala;
-    private Sede $escuintla;
+    private Sede $chiquimula;
     private User $admin;
 
     protected function setUp(): void
@@ -27,7 +27,7 @@ class Fase3Test extends TestCase
         $this->seed([GeografiaSeeder::class, SedesSeeder::class, RolesPermisosSeeder::class]);
         $this->guatemala = Sede::where('nombre', 'Ciudad de Guatemala')->firstOrFail();
         $this->guatemala->update(['direccion' => '3a. Calle 2-45, Zona 1, Ciudad de Guatemala']);
-        $this->escuintla = Sede::where('nombre', 'Escuintla')->firstOrFail();
+        $this->chiquimula = Sede::where('nombre', 'Chiquimula')->firstOrFail();
         $this->admin = User::factory()->create();
         $this->admin->assignRole(User::ROL_ADMINISTRADOR);
     }
@@ -62,7 +62,7 @@ class Fase3Test extends TestCase
     {
         $this->contacto(Contacto::CLIENTE, $this->guatemala);
         $this->contacto(Contacto::CLIENTE, $this->guatemala, ['correo' => null]);
-        $this->contacto(Contacto::CLIENTE, $this->escuintla);                // otra sede
+        $this->contacto(Contacto::CLIENTE, $this->chiquimula);                // otra sede
 
         $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion())
             ->assertRedirect();
@@ -83,12 +83,12 @@ class Fase3Test extends TestCase
     public function test_capacitacion_virtual_para_un_grupo(): void
     {
         $grupo = Grupo::create(['nombre' => 'Claustro básico', 'tipo' => Contacto::CLIENTE, 'sede_id' => null]);
-        $enSede = $this->contacto(Contacto::CLIENTE, $this->escuintla);
+        $enSede = $this->contacto(Contacto::CLIENTE, $this->chiquimula);
         $otraSede = $this->contacto(Contacto::CLIENTE, $this->guatemala);
         $grupo->contactos()->attach([$enSede->id, $otraSede->id]);
 
         $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), [
-            'titulo' => 'Evaluación por competencias', 'sede_id' => $this->escuintla->id, 'modalidad' => 'virtual',
+            'titulo' => 'Evaluación por competencias', 'sede_id' => $this->chiquimula->id, 'modalidad' => 'virtual',
             'fecha' => now()->addDays(3)->format('Y-m-d'), 'hora_inicio' => '08:00', 'hora_fin' => '12:30',
             'enlace' => 'https://meet.google.com/abc-defg-hij', 'facilitador' => 'Lic. Ana Pérez', 'cupo' => '30',
             'grupos' => [$grupo->id], 'lugar' => 'se ignora',
@@ -165,10 +165,10 @@ class Fase3Test extends TestCase
     public function test_usuario_de_sede_solo_ve_sus_eventos_y_secretaria_no_crea(): void
     {
         $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion(['titulo' => 'De Sanarate']));
-        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion(['titulo' => 'De Cobán', 'sede_id' => $this->escuintla->id]));
+        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion(['titulo' => 'De Cobán', 'sede_id' => $this->chiquimula->id]));
         $deGuatemala = Evento::where('titulo', 'De Sanarate')->firstOrFail();
 
-        $director = User::factory()->create(['sede_id' => $this->escuintla->id]);
+        $director = User::factory()->create(['sede_id' => $this->chiquimula->id]);
         $director->assignRole('Director de sede');
         $this->actingAs($director)->get(route('eventos.index', 'capacitaciones'))->assertSee('De Cobán')->assertDontSee('De Sanarate');
         $this->actingAs($director)->get(route('eventos.show', ['capacitaciones', $deGuatemala]))->assertForbidden();

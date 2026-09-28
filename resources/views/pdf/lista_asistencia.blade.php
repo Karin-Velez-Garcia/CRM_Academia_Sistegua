@@ -6,12 +6,12 @@
     <style>
         @page { margin: 32px 36px 40px; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 10.5px; color: #252f4a; }
-        .enc { width: 100%; border-bottom: 3px solid #1b84ff; padding-bottom: 8px; margin-bottom: 12px; }
+        .enc { width: 100%; border-bottom: 3px solid #d62228; padding-bottom: 8px; margin-bottom: 12px; }
         .enc td { vertical-align: middle; }
         .titulo { font-size: 17px; font-weight: bold; color: #071437; }
         .sub { color: #78829d; font-size: 10.5px; margin-top: 2px; }
         table.lista { width: 100%; border-collapse: collapse; }
-        table.lista th { background: #1b84ff; color: #fff; text-align: left; padding: 6px 6px; font-size: 10px; }
+        table.lista th { background: #d62228; color: #fff; text-align: left; padding: 6px 6px; font-size: 10px; }
         table.lista td { border-bottom: 1px solid #dbdfe9; padding: 7px 6px; height: 22px; }
         table.lista tr:nth-child(even) td { background: #f9f9fb; }
         .num { width: 22px; color: #99a1b7; }

@@ -17,7 +17,7 @@ class ClientesSeeder extends Seeder
     public const CLIENTES_POR_SEDE = [
         'Ciudad de Guatemala' => 180,
         'Quetzaltenango' => 120,
-        'Escuintla' => 100,
+        'Chiquimula' => 100,
     ];
 
     private array $nombresM = [

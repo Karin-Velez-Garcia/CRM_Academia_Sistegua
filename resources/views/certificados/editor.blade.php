@@ -253,7 +253,7 @@
             }
 
             if (i === seleccionado) {
-                div.style.outline = '2px solid #1E3A70';
+                div.style.outline = '2px solid #D62228';
                 div.style.outlineOffset = '2px';
                 const tirador = document.createElement('span');
                 tirador.dataset.tirador = '1';
@@ -343,8 +343,8 @@
     const nuevos = {
         texto: () => ({ id: 'el' + Date.now(), tipo: 'texto', texto: 'Texto nuevo', x: 30, y: 45, ancho: 40, fuente: 16, color: '#252F4A', alineacion: 'center', negrita: false, cursiva: false, mayusculas: false }),
         linea: () => ({ id: 'el' + Date.now(), tipo: 'linea', x: 30, y: 50, ancho: 40, color: '#252F4A', grosor: 1 }),
-        marco: () => ({ id: 'el' + Date.now(), tipo: 'marco', x: 5, y: 5, ancho: 90, alto: 90, color: '#1E3A70', grosor: 2 }),
-        imagen: () => ({ id: 'el' + Date.now(), tipo: 'imagen', src: 'logo', x: 42, y: 10, ancho: 16, alto: 0 }),
+        marco: () => ({ id: 'el' + Date.now(), tipo: 'marco', x: 5, y: 5, ancho: 90, alto: 90, color: '#D62228', grosor: 2 }),
+        imagen: () => ({ id: 'el' + Date.now(), tipo: 'imagen', src: 'logo', x: 35, y: 10, ancho: 30, alto: 0 }),
     };
     document.querySelectorAll('[data-agregar]').forEach(b => {
         b.addEventListener('click', () => {

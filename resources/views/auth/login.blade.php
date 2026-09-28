@@ -40,7 +40,7 @@
                                    class="form-control bg-transparent @error('email') is-invalid @enderror" placeholder="usuario@correo.com">
                         </div>
 
-                        <div class="fv-row mb-3">
+                        <div class="fv-row mb-10">
                             <label for="password" class="form-label fw-semibold text-gray-900">Contraseña</label>
                             <div class="position-relative">
                                 <input id="password" type="password" name="password" autocomplete="current-password" required
@@ -50,13 +50,6 @@
                                     <i class="ki-outline ki-eye fs-2"></i>
                                 </button>
                             </div>
-                        </div>
-
-                        <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-8">
-                            <label class="form-check form-check-sm form-check-custom form-check-solid">
-                                <input class="form-check-input" type="checkbox" name="recordar" value="1">
-                                <span class="form-check-label text-gray-700">Mantener la sesión iniciada</span>
-                            </label>
                         </div>
 
                         <div class="d-grid mb-10">
@@ -70,9 +63,19 @@
             </div>
         </div>
 
-        <div class="d-flex flex-lg-row-fluid w-lg-50 auth-aside order-1 order-lg-2"
-             style="background-image: url('{{ asset('assets/media/auth-bg.png') }}')">
-            <div class="d-flex flex-column flex-center py-10 py-lg-15 px-5 px-md-15 w-100">
+        <div class="d-flex flex-lg-row-fluid w-lg-50 auth-aside order-1 order-lg-2">
+            {{-- Fondo decorativo animado: figuras con la forma redondeada del logo --}}
+            <div class="auth-fondo" aria-hidden="true">
+                <span class="auth-brillo"></span>
+                <span class="figura f1"></span>
+                <span class="figura f2"></span>
+                <span class="figura f3"></span>
+                <span class="figura f4"></span>
+                <span class="figura f5"></span>
+                <span class="figura f6"></span>
+                <span class="figura f7"></span>
+            </div>
+            <div class="auth-contenido d-flex flex-column flex-center py-10 py-lg-15 px-5 px-md-15 w-100">
                 <div class="bg-white rounded-4 shadow-sm p-5 p-lg-7 mb-8 mb-lg-10">
                     <img alt="{{ config('academia.nombre') }}" src="{{ asset('assets/media/logos/academia-logo.png') }}" class="logo-login">
                 </div>

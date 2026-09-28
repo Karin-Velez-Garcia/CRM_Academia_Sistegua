@@ -289,7 +289,7 @@ class Fase4Test extends TestCase
         $this->actingAs($this->admin)->delete(route('plantillas.destroy', $unica))->assertSessionHas('error');
 
         // Director de otra sede no ve ni envía
-        $director = User::factory()->create(['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
+        $director = User::factory()->create(['sede_id' => Sede::where('nombre', 'Chiquimula')->value('id')]);
         $director->assignRole('Director de sede');
         $this->actingAs($director)->post(route('invitaciones.enviar', ['capacitaciones', $this->reunion]), ['asunto' => 'A', 'mensaje' => 'M'])->assertForbidden();
 
@@ -303,7 +303,7 @@ class Fase4Test extends TestCase
         $this->reunion->update(['para_todos' => false]);
         $this->reunion->grupos()->sync([$grupo->id]);
         $local = $this->padre();
-        $otra = $this->padre(['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
+        $otra = $this->padre(['sede_id' => Sede::where('nombre', 'Chiquimula')->value('id')]);
         $grupo->contactos()->attach([$local->id, $otra->id]);
 
         $this->enviar();
