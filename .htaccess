@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# Academia Sistegua — .htaccess de la RAÍZ del proyecto (para cPanel)
+#
+# Se usa cuando el proyecto completo se sube dentro de public_html (o de la
+# carpeta de un subdominio) y no se puede cambiar la raíz del dominio a /public.
+# Envía todas las visitas a la carpeta public/, de modo que nadie puede abrir
+# .env, vendor/, storage/, database/ ni ningún otro archivo del sistema.
+#
+# Si en cPanel sí puede apuntar el dominio directamente a la carpeta public/,
+# este archivo no se usa (y no estorba).
+# ---------------------------------------------------------------------------
+
+# Sin listado de carpetas
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Todo lo que no esté ya dentro de public/ se atiende desde public/
+    RewriteCond %{REQUEST_URI} !/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Si el servidor no tuviera mod_rewrite, se bloquea todo en lugar de exponer los archivos
+<IfModule !mod_rewrite.c>
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</IfModule>
+
+# Segunda barrera: archivos ocultos y de configuración nunca se sirven
+<FilesMatch "^(\.env.*|\.git.*|\.editorconfig|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|artisan|.*\.md|.*\.log|.*\.sql)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# --- Versión de PHP -----------------------------------------------------------
+# El sistema necesita PHP 8.2 o superior. Lo recomendable es elegirla en
+# cPanel → "MultiPHP Manager", que agrega aquí su propio bloque automáticamente.
+# Si su proveedor le indica hacerlo a mano, quite el # de la línea que aplique:
+# AddHandler application/x-httpd-ea-php82 .php
+# AddHandler application/x-httpd-ea-php83 .php
