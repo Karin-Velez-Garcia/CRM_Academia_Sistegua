@@ -30,12 +30,12 @@ class QrAsistenciaTest extends TestCase
         parent::setUp();
         $this->seed([GeografiaSeeder::class, SedesSeeder::class, RolesPermisosSeeder::class, PlantillasSeeder::class]);
         Mail::fake();
-        $this->sede = Sede::where('nombre', 'Sanarate')->firstOrFail();
+        $this->sede = Sede::where('nombre', 'Ciudad de Guatemala')->firstOrFail();
         $this->admin = User::factory()->create();
         $this->admin->assignRole(User::ROL_ADMINISTRADOR);
         // Empieza en 30 minutos: el registro por QR ya está abierto (abre 60 minutos antes)
         $this->evento = Evento::create([
-            'tipo' => Evento::REUNION, 'titulo' => 'Reunión de padres', 'sede_id' => $this->sede->id,
+            'tipo' => Evento::CAPACITACION, 'titulo' => 'Reunión de padres', 'sede_id' => $this->sede->id,
             'modalidad' => Evento::PRESENCIAL, 'lugar' => 'Salón', 'para_todos' => true,
             'inicio' => now()->addMinutes(30), 'fin' => now()->addMinutes(150),
         ]);
@@ -44,7 +44,7 @@ class QrAsistenciaTest extends TestCase
     private function contacto(array $datos = []): Contacto
     {
         return Contacto::create($datos + [
-            'tipo' => Contacto::PADRE, 'sede_id' => $this->sede->id, 'nombres' => 'N'.uniqid(), 'apellidos' => 'A', 'correo' => uniqid().'@correo.com',
+            'tipo' => Contacto::CLIENTE, 'sede_id' => $this->sede->id, 'nombres' => 'N'.uniqid(), 'apellidos' => 'A', 'correo' => uniqid().'@correo.com',
         ]);
     }
 
@@ -52,14 +52,14 @@ class QrAsistenciaTest extends TestCase
     {
         $this->assertNotEmpty($this->evento->token_registro);
 
-        $this->actingAs($this->admin)->get(route('asistencia.qr', ['reuniones', $this->evento]))
+        $this->actingAs($this->admin)->get(route('asistencia.qr', ['capacitaciones', $this->evento]))
             ->assertOk()->assertSee('data:image/png;base64', false)->assertSee('Abierto ahora');
-        $png = $this->actingAs($this->admin)->get(route('asistencia.qr.png', ['reuniones', $this->evento]));
+        $png = $this->actingAs($this->admin)->get(route('asistencia.qr.png', ['capacitaciones', $this->evento]));
         $png->assertOk()->assertHeader('Content-Type', 'image/png');
         $this->assertStringStartsWith("\x89PNG", $png->getContent());
 
         $anterior = $this->evento->token_registro;
-        $this->actingAs($this->admin)->post(route('asistencia.qr.renovar', ['reuniones', $this->evento]))->assertSessionHas('success');
+        $this->actingAs($this->admin)->post(route('asistencia.qr.renovar', ['capacitaciones', $this->evento]))->assertSessionHas('success');
         $this->assertNotSame($anterior, $this->evento->fresh()->token_registro);
         $this->get(route('registro.show', $anterior))->assertNotFound();
     }
@@ -88,7 +88,7 @@ class QrAsistenciaTest extends TestCase
         $this->get(route('registro.show', $this->evento->token_registro))->assertSee('Ya estaba registrado(a)');
 
         // No encontrado u otra sede
-        $otra = $this->contacto(['correo' => 'otra@correo.com', 'sede_id' => Sede::where('nombre', 'Cobán')->value('id')]);
+        $otra = $this->contacto(['correo' => 'otra@correo.com', 'sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
         $this->post($url, ['identificador' => 'otra@correo.com'])->assertSessionHas('error', fn ($m) => str_contains($m, 'mesa de registro'));
         $this->post($url, ['identificador' => 'nadie@correo.com'])->assertSessionHas('error');
         $this->assertNull(Invitacion::where('contacto_id', $otra->id)->first());
@@ -132,7 +132,7 @@ class QrAsistenciaTest extends TestCase
         $this->actingAs($this->admin)->get($inv->urlEscaneo())->assertSee('Ya estaba registrado(a)');
 
         // Secretaría de otra sede no puede
-        $otro = User::factory()->create(['sede_id' => Sede::where('nombre', 'Cobán')->value('id')]);
+        $otro = User::factory()->create(['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
         $otro->assignRole('Secretaría');
         $this->actingAs($otro)->get($inv->urlEscaneo())->assertForbidden();
     }
@@ -178,7 +178,7 @@ class QrAsistenciaTest extends TestCase
         $this->assertSame(1, $c['sin_invitacion_asistieron']);
         $this->assertSame(['manual' => 2, 'qr_evento' => 1, 'qr_personal' => 1], $c['por_metodo']);
 
-        $this->actingAs($this->admin)->get(route('eventos.show', ['reuniones', $evento]))
+        $this->actingAs($this->admin)->get(route('eventos.show', ['capacitaciones', $evento]))
             ->assertOk()->assertSee('Control del evento')->assertSee('Inasistencias')->assertSee('Confirmaron y faltaron');
     }
 
@@ -187,7 +187,7 @@ class QrAsistenciaTest extends TestCase
         $this->contacto();
         (new InvitacionesEvento($this->evento))->invitar('A', 'M', $this->admin);
 
-        $this->actingAs($this->admin)->get(route('eventos.show', ['reuniones', $this->evento]))
+        $this->actingAs($this->admin)->get(route('eventos.show', ['capacitaciones', $this->evento]))
             ->assertOk()->assertSee('Enviar recordatorio')->assertSee('Aún no se ha enviado');
     }
 }

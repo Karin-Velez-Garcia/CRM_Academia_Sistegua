@@ -1,7 +1,7 @@
 @php
     $logo = isset($message) && method_exists($message, 'embed')
-        ? $message->embed(public_path('assets/media/logos/esteca-icon.png'))
-        : asset('assets/media/logos/esteca-icon.png');
+        ? $message->embed(public_path('assets/media/logos/academia-icon.png'))
+        : asset('assets/media/logos/academia-icon.png');
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -13,7 +13,7 @@
             <tr><td style="background:#1b84ff; padding:20px 28px; color:#fff;">
                 <table role="presentation" cellspacing="0" cellpadding="0"><tr>
                     <td style="background:#fff; border-radius:8px; padding:4px;"><img src="{{ $logo }}" width="44" height="44" alt="" style="display:block;"></td>
-                    <td style="padding-left:14px;"><div style="font-size:18px; font-weight:bold;">{{ config('colegio.nombre') }}</div>
+                    <td style="padding-left:14px;"><div style="font-size:18px; font-weight:bold;">{{ config('academia.nombre') }}</div>
                         <div style="font-size:13px; opacity:.85;">Sede {{ $evento->sede->nombre }}</div></td>
                 </tr></table>
             </td></tr>

@@ -4,7 +4,7 @@
         <div class="row g-6">
             <div class="col-md-6">
                 <label for="nombre" class="required form-label fw-semibold">Nombre del grupo</label>
-                <input id="nombre" name="nombre" value="{{ old('nombre', $grupo->nombre) }}" required maxlength="100" placeholder="Por ejemplo: Padres de 3.º Básico"
+                <input id="nombre" name="nombre" value="{{ old('nombre', $grupo->nombre) }}" required maxlength="100" placeholder="Por ejemplo: Instaladores certificados"
                        class="form-control form-control-solid @error('nombre') is-invalid @enderror">
                 @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
@@ -35,7 +35,7 @@
             </div>
         </div>
         <div class="text-muted fs-7 mt-6">
-            Un grupo "Mixto" puede incluir padres de familia y catedráticos. Un grupo con sede solo admite contactos de esa sede.
+            Un grupo "Mixto" puede incluir clientes y clientes. Un grupo con sede solo admite contactos de esa sede.
         </div>
     </div>
     <div class="card-footer d-flex justify-content-end gap-3 py-6">

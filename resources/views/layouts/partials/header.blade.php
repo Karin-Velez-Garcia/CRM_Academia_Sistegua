@@ -11,7 +11,7 @@
 
         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 d-lg-none">
             <a href="{{ route('dashboard') }}">
-                <img alt="{{ config('colegio.nombre') }}" src="{{ asset('assets/media/logos/esteca-icon.png') }}" class="h-35px rounded">
+                <img alt="{{ config('academia.nombre') }}" src="{{ asset('assets/media/logos/academia-icon.png') }}" class="h-35px rounded">
             </a>
         </div>
 

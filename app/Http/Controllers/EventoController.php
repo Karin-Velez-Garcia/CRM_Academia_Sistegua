@@ -241,9 +241,9 @@ class EventoController extends Controller implements HasMiddleware
         $descripcion = trim($evento->descripcion."\n\n".($evento->es_virtual ? "Enlace: {$evento->enlace}" : "Lugar: {$evento->lugar}"));
 
         $lineas = [
-            'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//'.config('colegio.nombre').'//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+            'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//'.config('academia.nombre').'//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
             'BEGIN:VEVENT',
-            'UID:evento-'.$evento->id.'@'.(parse_url(config('app.url'), PHP_URL_HOST) ?: 'colegio'),
+            'UID:evento-'.$evento->id.'@'.(parse_url(config('app.url'), PHP_URL_HOST) ?: 'academia'),
             'DTSTAMP:'.$utc(now()),
             'DTSTART:'.$utc($evento->inicio),
             'DTEND:'.$utc($evento->fin),

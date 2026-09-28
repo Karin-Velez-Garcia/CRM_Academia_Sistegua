@@ -35,11 +35,10 @@
     {{-- Indicadores clave --}}
     <div class="row g-5 mb-5">
         @foreach ([
-            ['Padres de familia', number_format($kpi['padres']), 'registrados', 'ki-people', route('contactos.index', 'padres')],
-            ['Catedráticos', number_format($kpi['catedraticos']), 'registrados', 'ki-teacher', route('contactos.index', 'catedraticos')],
-            ['Próximos 30 días', $kpi['proximos_30'], $kpi['proximos_30'] === 1 ? 'evento programado' : 'eventos programados', 'ki-calendar', null],
+            ['Clientes', number_format($kpi['clientes']), 'registrados', 'ki-people', route('contactos.index', 'clientes')],
+            ['Próximos 30 días', $kpi['proximos_30'], $kpi['proximos_30'] === 1 ? 'capacitación programada' : 'capacitaciones programadas', 'ki-calendar', null],
             ['Confirmación', $pct($kpi['tasa_confirmacion']), 'de '.number_format($totales['enviadas']).' invitaciones enviadas', 'ki-check-circle', null],
-            ['Asistencia', $pct($kpi['tasa_asistencia']), 'de los invitados en '.$kpi['realizados'].' '.($kpi['realizados'] === 1 ? 'evento' : 'eventos'), 'ki-user-tick', null],
+            ['Asistencia', $pct($kpi['tasa_asistencia']), 'de los invitados en '.$kpi['realizados'].' '.($kpi['realizados'] === 1 ? 'capacitación' : 'capacitaciones'), 'ki-user-tick', null],
         ] as [$titulo, $valor, $detalle, $icono, $enlace])
             <div class="col-sm-6 col-xl">
                 <div class="card h-100 position-relative">

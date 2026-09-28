@@ -26,7 +26,7 @@ class ExcelTabla
 
         $hoja->setCellValue('A1', $titulo);
         $hoja->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $hoja->setCellValue('A2', $subtitulo ?? config('colegio.nombre').' · Generado el '.now()->format('d/m/Y H:i'));
+        $hoja->setCellValue('A2', $subtitulo ?? config('academia.nombre').' · Generado el '.now()->format('d/m/Y H:i'));
         $hoja->getStyle('A2')->getFont()->getColor()->setRGB('78829D');
 
         $filaEnc = 4;

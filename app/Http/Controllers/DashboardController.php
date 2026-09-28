@@ -57,8 +57,7 @@ class DashboardController extends Controller
             'sedeId' => $sedeId,
             'sedes' => $restringida ? collect() : Sede::activas()->orderBy('nombre')->get(),
             'kpi' => [
-                'padres' => Contacto::tipo(Contacto::PADRE)->tap($porSede)->count(),
-                'catedraticos' => Contacto::tipo(Contacto::CATEDRATICO)->tap($porSede)->count(),
+                'clientes' => Contacto::tipo(Contacto::CLIENTE)->tap($porSede)->count(),
                 'proximos_30' => Evento::proximos()->tap($porSede)->where('inicio', '<=', now()->addDays(30))->count(),
                 'realizados' => $realizados->count(),
                 'tasa_confirmacion' => self::tasa($totales['confirmadas'], $totales['enviadas']),

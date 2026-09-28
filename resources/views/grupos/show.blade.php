@@ -2,9 +2,7 @@
 
 @php
     $puedeEditar = auth()->user()->can('contactos.editar') && ! (auth()->user()->sedeRestringida() && $grupo->sede_id === null);
-    $segmentos = $grupo->tipo === \App\Models\Grupo::MIXTO
-        ? ['padres', 'catedraticos']
-        : [\App\Models\Contacto::segmentoDe($grupo->tipo)];
+    $segmentos = [\App\Models\Contacto::segmentoDe($grupo->tipo)];
 @endphp
 
 @section('title', $grupo->nombre)
@@ -74,7 +72,7 @@
         <div class="card-body py-4">
             @if ($puedeEditar && $miembros->total() === 0)
                 <div class="text-muted fs-7 mb-4">
-                    Para agregar miembros, abra la lista de padres de familia o catedráticos, marque a las personas y elija
+                    Para agregar miembros, abra la lista de clientes o clientes, marque a las personas y elija
                     <strong>Agregar a un grupo</strong>. También puede indicar el grupo al cargar un Excel.
                 </div>
             @endif
@@ -93,7 +91,7 @@
                     @forelse ($miembros as $c)
                         <tr>
                             <td class="text-gray-800 fw-bold">{{ $c->nombre_completo }}</td>
-                            <td>{{ $c->tipo === \App\Models\Contacto::PADRE ? 'Padre de familia' : 'Catedrático' }}</td>
+                            <td>{{ $c->oficio ?: '—' }}</td>
                             <td>
                                 @if (! $c->correo)
                                     <span class="text-warning">Sin correo</span>

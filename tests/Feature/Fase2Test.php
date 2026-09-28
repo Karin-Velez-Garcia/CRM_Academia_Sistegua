@@ -21,17 +21,17 @@ class Fase2Test extends TestCase
 {
     use RefreshDatabase;
 
-    private Sede $sanarate;
-    private Sede $salama;
-    private Sede $coban;
+    private Sede $guatemala;
+    private Sede $xela;
+    private Sede $escuintla;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed([GeografiaSeeder::class, SedesSeeder::class, RolesPermisosSeeder::class]);
-        $this->sanarate = Sede::where('nombre', 'Sanarate')->firstOrFail();
-        $this->salama = Sede::where('nombre', 'Salamá')->firstOrFail();
-        $this->coban = Sede::where('nombre', 'Cobán')->firstOrFail();
+        $this->guatemala = Sede::where('nombre', 'Ciudad de Guatemala')->firstOrFail();
+        $this->xela = Sede::where('nombre', 'Quetzaltenango')->firstOrFail();
+        $this->escuintla = Sede::where('nombre', 'Escuintla')->firstOrFail();
     }
 
     private function usuario(string $rol, ?Sede $sede = null): User
@@ -45,7 +45,7 @@ class Fase2Test extends TestCase
     private function padre(array $datos = []): Contacto
     {
         return Contacto::create($datos + [
-            'tipo' => Contacto::PADRE, 'sede_id' => $this->sanarate->id,
+            'tipo' => Contacto::CLIENTE, 'sede_id' => $this->guatemala->id,
             'nombres' => 'Juan', 'apellidos' => 'Pérez', 'correo' => 'juan'.uniqid().'@correo.com',
         ]);
     }
@@ -60,62 +60,60 @@ class Fase2Test extends TestCase
         return new UploadedFile($ruta, 'contactos.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
     }
 
-    public function test_sedes_del_colegio_estan_cargadas(): void
+    public function test_sedes_de_la_academia_estan_cargadas(): void
     {
-        $this->assertSame(['Cobán', 'Salamá', 'Sanarate'], Sede::orderBy('nombre')->pluck('nombre')->all());
-        $this->assertSame('El Progreso', $this->sanarate->municipio->departamento->nombre);
-        $this->assertSame('Baja Verapaz', $this->salama->municipio->departamento->nombre);
-        $this->assertSame('Alta Verapaz', $this->coban->municipio->departamento->nombre);
+        $this->assertSame(['Ciudad de Guatemala', 'Escuintla', 'Quetzaltenango'], Sede::orderBy('nombre')->pluck('nombre')->all());
+        $this->assertSame('Guatemala', $this->guatemala->municipio->departamento->nombre);
+        $this->assertSame('Quetzaltenango', $this->xela->municipio->departamento->nombre);
+        $this->assertSame('Escuintla', $this->escuintla->municipio->departamento->nombre);
     }
 
     public function test_crud_de_sedes_y_proteccion_al_eliminar(): void
     {
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
 
-        $this->actingAs($admin)->get(route('sedes.index'))->assertOk()->assertSee('Sede Sanarate');
+        $this->actingAs($admin)->get(route('sedes.index'))->assertOk()->assertSee('Sede Ciudad de Guatemala');
         $this->actingAs($admin)->post(route('sedes.store'), [
-            'nombre' => 'Guastatoya', 'municipio_id' => $this->sanarate->municipio_id - 6, 'activa' => '1', 'telefono' => '79451234',
-            'direccion' => 'Barrio El Centro, Guastatoya',
+            'nombre' => 'Mixco', 'municipio_id' => \App\Models\Municipio::where('codigo', '0108')->value('id'), 'activa' => '1', 'telefono' => '79451234',
+            'direccion' => 'Calzada Roosevelt, Mixco',
         ])->assertRedirect(route('sedes.index'));
-        $this->assertDatabaseHas('sedes', ['nombre' => 'Guastatoya']);
+        $this->assertDatabaseHas('sedes', ['nombre' => 'Mixco']);
 
         $this->padre();
-        $this->actingAs($admin)->delete(route('sedes.destroy', $this->sanarate))->assertSessionHas('error');
-        $this->assertModelExists($this->sanarate);
+        $this->actingAs($admin)->delete(route('sedes.destroy', $this->guatemala))->assertSessionHas('error');
+        $this->assertModelExists($this->guatemala);
     }
 
-    public function test_crear_editar_y_eliminar_padre_de_familia(): void
+    public function test_crear_editar_y_eliminar_cliente(): void
     {
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
-        $grupo = Grupo::create(['nombre' => 'Padres 3.º Básico', 'tipo' => Contacto::PADRE, 'sede_id' => $this->sanarate->id]);
+        $grupo = Grupo::create(['nombre' => 'Instaladores certificados', 'tipo' => Contacto::CLIENTE, 'sede_id' => $this->guatemala->id]);
 
-        $this->actingAs($admin)->get(route('contactos.create', 'padres'))->assertOk()->assertSee('Nombre del estudiante');
+        $this->actingAs($admin)->get(route('contactos.create', 'clientes'))->assertOk()->assertSee('Empresa o negocio');
 
-        $this->actingAs($admin)->post(route('contactos.store', 'padres'), [
+        $this->actingAs($admin)->post(route('contactos.store', 'clientes'), [
             'nombres' => 'María', 'apellidos' => 'García', 'correo' => 'MARIA@Correo.com', 'telefono' => '58743210',
-            'dpi' => '2584736910207', 'sede_id' => $this->sanarate->id, 'estudiante' => 'Ana García',
-            'grado_seccion' => '3.º Básico A', 'acepta_correos' => '1', 'grupos' => [$grupo->id],
-        ])->assertRedirect(route('contactos.index', 'padres'));
+            'dpi' => '2584736910207', 'sede_id' => $this->guatemala->id, 'empresa' => 'Constructora García',
+            'oficio' => 'Contratista', 'acepta_correos' => '1', 'grupos' => [$grupo->id],
+        ])->assertRedirect(route('contactos.index', 'clientes'));
 
         $maria = Contacto::where('correo', 'maria@correo.com')->firstOrFail();
-        $this->assertSame(Contacto::PADRE, $maria->tipo);
+        $this->assertSame(Contacto::CLIENTE, $maria->tipo);
         $this->assertSame('5874-3210', $maria->telefono);
         $this->assertTrue($maria->grupos->contains($grupo));
         $this->assertNotEmpty($maria->token);
 
-        $this->actingAs($admin)->get(route('contactos.index', ['padres', 'buscar' => 'María García']))->assertOk()->assertSee('Ana García');
+        $this->actingAs($admin)->get(route('contactos.index', ['clientes', 'buscar' => 'María García']))
+            ->assertOk()->assertSee('Constructora García');
 
-        $this->actingAs($admin)->put(route('contactos.update', ['padres', $maria]), [
-            'nombres' => 'María José', 'apellidos' => 'García', 'correo' => 'maria@correo.com', 'sede_id' => $this->sanarate->id,
-        ])->assertRedirect(route('contactos.index', 'padres'));
+        $this->actingAs($admin)->put(route('contactos.update', ['clientes', $maria]), [
+            'nombres' => 'María José', 'apellidos' => 'García', 'correo' => 'maria@correo.com', 'sede_id' => $this->guatemala->id,
+        ])->assertRedirect(route('contactos.index', 'clientes'));
         $this->assertSame('María José', $maria->fresh()->nombres);
         $this->assertCount(0, $maria->fresh()->grupos);
         $this->assertFalse($maria->fresh()->acepta_correos);
 
-        // Un padre no se puede editar desde la ruta de catedráticos
-        $this->actingAs($admin)->get(route('contactos.edit', ['catedraticos', $maria]))->assertNotFound();
-
-        $this->actingAs($admin)->delete(route('contactos.destroy', ['padres', $maria]))->assertRedirect();
+        $this->actingAs($admin)->delete(route('contactos.destroy', ['clientes', $maria]))->assertRedirect();
         $this->assertModelMissing($maria);
     }
 
@@ -124,31 +122,31 @@ class Fase2Test extends TestCase
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
         $this->padre(['correo' => 'repetido@correo.com']);
 
-        $this->actingAs($admin)->post(route('contactos.store', 'padres'), [
+        $this->actingAs($admin)->post(route('contactos.store', 'clientes'), [
             'nombres' => '', 'apellidos' => 'X', 'correo' => 'repetido@correo.com', 'dpi' => '12', 'telefono' => '1', 'sede_id' => 999,
         ])->assertSessionHasErrors(['nombres', 'correo', 'dpi', 'telefono', 'sede_id']);
 
-        // El mismo correo sí puede existir como catedrático (tipo distinto)
-        $this->actingAs($admin)->post(route('contactos.store', 'catedraticos'), [
-            'nombres' => 'Luis', 'apellidos' => 'Morales', 'correo' => 'repetido@correo.com', 'sede_id' => $this->coban->id, 'area' => 'Matemática',
+        // Un correo distinto sí se acepta
+        $this->actingAs($admin)->post(route('contactos.store', 'clientes'), [
+            'nombres' => 'Luis', 'apellidos' => 'Morales', 'correo' => 'otro@correo.com', 'sede_id' => $this->escuintla->id, 'oficio' => 'Instalador de tabla yeso',
         ])->assertSessionHasNoErrors();
-        $this->assertDatabaseHas('contactos', ['tipo' => Contacto::CATEDRATICO, 'correo' => 'repetido@correo.com', 'area' => 'Matemática']);
+        $this->assertDatabaseHas('contactos', ['correo' => 'otro@correo.com', 'oficio' => 'Instalador de tabla yeso']);
     }
 
     public function test_usuario_limitado_a_su_sede(): void
     {
-        $directora = $this->usuario('Director de sede', $this->salama);
-        $deSanarate = $this->padre(['nombres' => 'Pedro']);
-        $deSalama = $this->padre(['nombres' => 'Lucía', 'sede_id' => $this->salama->id]);
+        $directora = $this->usuario('Director de sede', $this->xela);
+        $deGuatemala = $this->padre(['nombres' => 'Pedro']);
+        $deXela = $this->padre(['nombres' => 'Lucía', 'sede_id' => $this->xela->id]);
 
-        $this->actingAs($directora)->get(route('contactos.index', 'padres'))
+        $this->actingAs($directora)->get(route('contactos.index', 'clientes'))
             ->assertOk()->assertSee('Lucía')->assertDontSee('Pedro');
-        $this->actingAs($directora)->get(route('contactos.edit', ['padres', $deSanarate]))->assertForbidden();
-        $this->actingAs($directora)->get(route('contactos.edit', ['padres', $deSalama]))->assertOk();
+        $this->actingAs($directora)->get(route('contactos.edit', ['clientes', $deGuatemala]))->assertForbidden();
+        $this->actingAs($directora)->get(route('contactos.edit', ['clientes', $deXela]))->assertOk();
 
         // No puede registrar contactos en otra sede
-        $this->actingAs($directora)->post(route('contactos.store', 'padres'), [
-            'nombres' => 'X', 'apellidos' => 'Y', 'sede_id' => $this->sanarate->id,
+        $this->actingAs($directora)->post(route('contactos.store', 'clientes'), [
+            'nombres' => 'X', 'apellidos' => 'Y', 'sede_id' => $this->guatemala->id,
         ])->assertSessionHasErrors('sede_id');
     }
 
@@ -157,34 +155,34 @@ class Fase2Test extends TestCase
         $secretaria = $this->usuario('Secretaría');
         $p = $this->padre();
 
-        $this->actingAs($secretaria)->get(route('contactos.index', 'padres'))->assertOk();
-        $this->actingAs($secretaria)->delete(route('contactos.destroy', ['padres', $p]))->assertForbidden();
+        $this->actingAs($secretaria)->get(route('contactos.index', 'clientes'))->assertOk();
+        $this->actingAs($secretaria)->delete(route('contactos.destroy', ['clientes', $p]))->assertForbidden();
         $this->actingAs($secretaria)->get(route('sedes.create'))->assertForbidden();
-        $this->actingAs($secretaria)->post(route('contactos.masivo', 'padres'), ['accion' => 'eliminar', 'ids' => [$p->id]])->assertForbidden();
+        $this->actingAs($secretaria)->post(route('contactos.masivo', 'clientes'), ['accion' => 'eliminar', 'ids' => [$p->id]])->assertForbidden();
         $this->assertModelExists($p);
     }
 
     public function test_acciones_masivas_con_grupos(): void
     {
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
-        $grupo = Grupo::create(['nombre' => 'Comité', 'tipo' => Contacto::PADRE, 'sede_id' => $this->sanarate->id]);
+        $grupo = Grupo::create(['nombre' => 'Comité', 'tipo' => Contacto::CLIENTE, 'sede_id' => $this->guatemala->id]);
         $a = $this->padre();
         $b = $this->padre();
-        $deCoban = $this->padre(['sede_id' => $this->coban->id]);
+        $deEscuintla = $this->padre(['sede_id' => $this->escuintla->id]);
 
-        $this->actingAs($admin)->post(route('contactos.masivo', 'padres'), [
-            'accion' => 'agregar_grupo', 'grupo_id' => $grupo->id, 'ids' => [$a->id, $b->id, $deCoban->id],
+        $this->actingAs($admin)->post(route('contactos.masivo', 'clientes'), [
+            'accion' => 'agregar_grupo', 'grupo_id' => $grupo->id, 'ids' => [$a->id, $b->id, $deEscuintla->id],
         ])->assertSessionHas('success', fn ($m) => str_contains($m, 'Se agregaron 2') && str_contains($m, '1 no se agregaron'));
         $this->assertSame(2, $grupo->contactos()->count());
 
         $this->actingAs($admin)->get(route('grupos.show', $grupo))->assertOk()->assertSee($a->nombre_completo);
 
-        $this->actingAs($admin)->post(route('contactos.masivo', 'padres'), [
+        $this->actingAs($admin)->post(route('contactos.masivo', 'clientes'), [
             'accion' => 'quitar_grupo', 'grupo_id' => $grupo->id, 'ids' => [$a->id],
         ]);
         $this->assertSame(1, $grupo->contactos()->count());
 
-        $this->actingAs($admin)->post(route('contactos.masivo', 'padres'), ['accion' => 'eliminar', 'ids' => [$a->id, $b->id]]);
+        $this->actingAs($admin)->post(route('contactos.masivo', 'clientes'), ['accion' => 'eliminar', 'ids' => [$a->id, $b->id]]);
         $this->assertSame(1, Contacto::count());
     }
 
@@ -193,13 +191,13 @@ class Fase2Test extends TestCase
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
 
         $this->actingAs($admin)->post(route('grupos.store'), [
-            'nombre' => 'Claustro básico', 'tipo' => Contacto::CATEDRATICO, 'sede_id' => $this->coban->id,
+            'nombre' => 'Claustro básico', 'tipo' => Contacto::CLIENTE, 'sede_id' => $this->escuintla->id,
         ])->assertRedirect();
         $grupo = Grupo::where('nombre', 'Claustro básico')->firstOrFail();
 
         // Nombre repetido en la misma sede
         $this->actingAs($admin)->post(route('grupos.store'), [
-            'nombre' => 'Claustro básico', 'tipo' => Contacto::CATEDRATICO, 'sede_id' => $this->coban->id,
+            'nombre' => 'Claustro básico', 'tipo' => Contacto::CLIENTE, 'sede_id' => $this->escuintla->id,
         ])->assertSessionHasErrors('nombre');
 
         $this->actingAs($admin)->get(route('grupos.index'))->assertOk()->assertSee('Claustro básico');
@@ -211,13 +209,13 @@ class Fase2Test extends TestCase
     {
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
 
-        $resp = $this->actingAs($admin)->get(route('contactos.plantilla', 'padres'));
+        $resp = $this->actingAs($admin)->get(route('contactos.plantilla', 'clientes'));
         $resp->assertOk();
         $ruta = tempnam(sys_get_temp_dir(), 'pla').'.xlsx';
         file_put_contents($ruta, $resp->streamedContent());
 
         $hoja = IOFactory::load($ruta)->getSheet(0);
-        $this->assertSame(['Nombres', 'Apellidos', 'DPI', 'Correo', 'Teléfono', 'Sede', 'Estudiante', 'Grado y sección', 'Grupos'],
+        $this->assertSame(['Nombres', 'Apellidos', 'DPI', 'Correo', 'Teléfono', 'Sede', 'Empresa', 'Oficio', 'Grupos'],
             $hoja->rangeToArray('A1:I1')[0]);
     }
 
@@ -227,19 +225,19 @@ class Fase2Test extends TestCase
         $existente = $this->padre(['correo' => 'existente@correo.com', 'nombres' => 'Viejo', 'telefono' => '1111-2222']);
 
         $archivo = $this->excel([
-            ['Nombres', 'Apellidos', 'DPI', 'Correo', 'Teléfono', 'Sede', 'Estudiante', 'Grado y sección', 'Grupos'],
-            ['Ana', 'López', '2584 73691 0207', 'ana@correo.com', '+502 5874 3210', 'sanarate', 'Luis López', '1.º Básico', 'Padres 1.º Básico, Comité'],
-            ['Nuevo', 'Nombre', '', 'EXISTENTE@correo.com', '', 'Sanarate', '', '', ''],
+            ['Nombres', 'Apellidos', 'DPI', 'Correo', 'Teléfono', 'Sede', 'Empresa', 'Oficio', 'Grupos'],
+            ['Ana', 'López', '2584 73691 0207', 'ana@correo.com', '+502 5874 3210', 'ciudad de guatemala', 'Constructora López', 'Contratista', 'Instaladores, Comité'],
+            ['Nuevo', 'Nombre', '', 'EXISTENTE@correo.com', '', 'Ciudad de Guatemala', '', '', ''],
             ['', '', '', '', '', '', '', '', ''],                                         // vacía: se ignora
             ['Sin', 'Sede', '', 'sinsede@correo.com', '', '', '', '', ''],                // error: falta sede
-            ['Mal', 'Correo', '', 'no-es-correo', '', 'Cobán', '', '', ''],               // error: correo inválido
-            ['Otra', 'Sede', '', 'otra@correo.com', '', 'Quetzaltenango', '', '', ''],    // error: sede no existe
-            ['Repetida', 'Fila', '', 'ana@correo.com', '', 'Salama', '', '', ''],         // error: repetida en archivo
-            ['Beto', 'Chen', '', '', '4478-5632', 'COBAN', 'Mía Chen', '2.º Primaria', ''],
+            ['Mal', 'Correo', '', 'no-es-correo', '', 'Escuintla', '', '', ''],           // error: correo inválido
+            ['Otra', 'Sede', '', 'otra@correo.com', '', 'Antigua Guatemala', '', '', ''], // error: sede no existe
+            ['Repetida', 'Fila', '', 'ana@correo.com', '', 'Quetzaltenango', '', '', ''], // error: repetida en archivo
+            ['Beto', 'Chen', '', '', '4478-5632', 'ESCUINTLA', 'Ferretería Chen', 'Propietario de ferretería', ''],
         ]);
 
-        $this->actingAs($admin)->post(route('contactos.importar.store', 'padres'), ['archivo' => $archivo, 'existentes' => 'actualizar'])
-            ->assertRedirect(route('contactos.importar', 'padres'));
+        $this->actingAs($admin)->post(route('contactos.importar.store', 'clientes'), ['archivo' => $archivo, 'existentes' => 'actualizar'])
+            ->assertRedirect(route('contactos.importar', 'clientes'));
 
         $r = session('resultado');
         $this->assertSame(7, $r['total']);
@@ -252,27 +250,27 @@ class Fase2Test extends TestCase
         $ana = Contacto::where('correo', 'ana@correo.com')->firstOrFail();
         $this->assertSame('2584736910207', $ana->dpi);
         $this->assertSame('5874-3210', $ana->telefono);
-        $this->assertSame($this->sanarate->id, $ana->sede_id);
-        $this->assertEqualsCanonicalizing(['Padres 1.º Básico', 'Comité'], $ana->grupos->pluck('nombre')->all());
+        $this->assertSame($this->guatemala->id, $ana->sede_id);
+        $this->assertEqualsCanonicalizing(['Instaladores', 'Comité'], $ana->grupos->pluck('nombre')->all());
 
         // Se actualiza el nombre pero el teléfono vacío no borra el que ya tenía
         $existente->refresh();
         $this->assertSame('Nuevo', $existente->nombres);
         $this->assertSame('1111-2222', $existente->telefono);
 
-        $this->assertSame($this->coban->id, Contacto::where('nombres', 'Beto')->value('sede_id'));
+        $this->assertSame($this->escuintla->id, Contacto::where('nombres', 'Beto')->value('sede_id'));
 
-        $this->actingAs($admin)->get(route('contactos.importar', 'padres'))->assertOk();
+        $this->actingAs($admin)->get(route('contactos.importar', 'clientes'))->assertOk();
     }
 
     public function test_importar_sin_actualizar_existentes_y_con_grupo_destino(): void
     {
-        $grupo = Grupo::create(['nombre' => 'Todos', 'tipo' => Contacto::PADRE, 'sede_id' => null]);
+        $grupo = Grupo::create(['nombre' => 'Todos', 'tipo' => Contacto::CLIENTE, 'sede_id' => null]);
         $existente = $this->padre(['correo' => 'yaesta@correo.com', 'nombres' => 'Original']);
 
-        $r = (new ImportadorContactos(Contacto::PADRE, actualizarExistentes: false, grupoDestino: $grupo))->procesar(collect([
-            ['nombres' => 'Cambio', 'apellidos' => 'X', 'correo' => 'yaesta@correo.com', 'sede' => 'Sanarate'],
-            ['nombres' => 'Nueva', 'apellidos' => 'Persona', 'correo' => 'nueva@correo.com', 'sede' => 'Salamá'],
+        $r = (new ImportadorContactos(Contacto::CLIENTE, actualizarExistentes: false, grupoDestino: $grupo))->procesar(collect([
+            ['nombres' => 'Cambio', 'apellidos' => 'X', 'correo' => 'yaesta@correo.com', 'sede' => 'Ciudad de Guatemala'],
+            ['nombres' => 'Nueva', 'apellidos' => 'Persona', 'correo' => 'nueva@correo.com', 'sede' => 'Quetzaltenango'],
         ]));
 
         $this->assertSame(1, $r['omitidos']);
@@ -283,19 +281,19 @@ class Fase2Test extends TestCase
 
     public function test_importar_limitado_a_la_sede_del_usuario(): void
     {
-        $r = (new ImportadorContactos(Contacto::CATEDRATICO, sedeRestringida: $this->coban->id))->procesar(collect([
-            ['nombres' => 'Sin', 'apellidos' => 'Sede', 'correo' => 'a@correo.com', 'area' => 'Física'],
-            ['nombres' => 'Otra', 'apellidos' => 'Sede', 'correo' => 'b@correo.com', 'sede' => 'Sanarate'],
+        $r = (new ImportadorContactos(Contacto::CLIENTE, sedeRestringida: $this->escuintla->id))->procesar(collect([
+            ['nombres' => 'Sin', 'apellidos' => 'Sede', 'correo' => 'a@correo.com', 'oficio' => 'Física'],
+            ['nombres' => 'Otra', 'apellidos' => 'Sede', 'correo' => 'b@correo.com', 'sede' => 'Ciudad de Guatemala'],
         ]));
 
         $this->assertSame(1, $r['creados']);
         $this->assertCount(1, $r['errores']);
-        $this->assertSame($this->coban->id, Contacto::where('correo', 'a@correo.com')->value('sede_id'));
+        $this->assertSame($this->escuintla->id, Contacto::where('correo', 'a@correo.com')->value('sede_id'));
     }
 
     public function test_archivo_sin_columnas_obligatorias(): void
     {
-        $r = (new ImportadorContactos(Contacto::PADRE))->procesar(collect([['telefono' => '5874-3210']]));
+        $r = (new ImportadorContactos(Contacto::CLIENTE))->procesar(collect([['telefono' => '5874-3210']]));
 
         $this->assertSame(0, $r['creados']);
         $this->assertStringContainsString('columnas obligatorias', $r['errores'][0]['mensaje']);
@@ -304,15 +302,15 @@ class Fase2Test extends TestCase
     public function test_exportar_contactos(): void
     {
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
-        $this->padre(['nombres' => 'Exportado', 'estudiante' => 'Hijo']);
+        $this->padre(['nombres' => 'Exportado', 'empresa' => 'Hijo']);
 
-        $resp = $this->actingAs($admin)->get(route('contactos.exportar', 'padres'));
+        $resp = $this->actingAs($admin)->get(route('contactos.exportar', 'clientes'));
         $resp->assertOk();
         $ruta = tempnam(sys_get_temp_dir(), 'exp').'.xlsx';
         file_put_contents($ruta, $resp->streamedContent());
 
         $filas = IOFactory::load($ruta)->getSheet(0)->toArray();
         $this->assertSame('Exportado', $filas[1][0]);
-        $this->assertSame('Sanarate', $filas[1][5]);
+        $this->assertSame('Ciudad de Guatemala', $filas[1][5]);
     }
 }

@@ -10,14 +10,14 @@ class Plantilla extends Model
     public const VARIABLES = [
         '{nombre}' => 'Nombre completo del invitado',
         '{nombres}' => 'Solo los nombres del invitado',
-        '{estudiante}' => 'Nombre del estudiante (padres)',
-        '{grado}' => 'Grado y sección (padres)',
-        '{titulo}' => 'Título del evento',
+        '{empresa}' => 'Empresa o negocio del cliente',
+        '{oficio}' => 'Oficio del cliente (instalador, contratista…)',
+        '{titulo}' => 'Título de la capacitación',
         '{fecha}' => 'Fecha, por ejemplo "martes 14 de octubre de 2026"',
         '{hora}' => 'Hora de inicio y fin',
         '{lugar}' => 'Lugar o plataforma virtual',
         '{sede}' => 'Nombre de la sede',
-        '{colegio}' => 'Nombre del colegio',
+        '{academia}' => 'Nombre de la academia',
     ];
 
     protected $fillable = ['nombre', 'tipo_evento', 'asunto', 'mensaje', 'predeterminada'];
@@ -40,14 +40,14 @@ class Plantilla extends Model
         return strtr((string) $texto, [
             '{nombre}' => $contacto?->nombre_completo ?? 'Nombre Apellido',
             '{nombres}' => $contacto?->nombres ?? 'Nombre',
-            '{estudiante}' => $contacto?->estudiante ?: 'su hijo(a)',
-            '{grado}' => $contacto?->grado_seccion ?? '',
+            '{empresa}' => $contacto?->empresa ?: 'su empresa',
+            '{oficio}' => $contacto?->oficio ?? '',
             '{titulo}' => $evento->titulo,
             '{fecha}' => $evento->inicio->translatedFormat('l j \d\e F \d\e Y'),
             '{hora}' => $evento->inicio->format('H:i').' a '.$evento->fin->format('H:i').' h',
             '{lugar}' => (string) $lugar,
             '{sede}' => $evento->sede->nombre,
-            '{colegio}' => config('colegio.nombre'),
+            '{academia}' => config('academia.nombre'),
         ]);
     }
 }

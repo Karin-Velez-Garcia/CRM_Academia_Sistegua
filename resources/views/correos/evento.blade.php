@@ -1,8 +1,8 @@
 @php
     // En el envío real el logo va incrustado en el correo; en la vista previa se usa la URL pública
     $logo = isset($message) && method_exists($message, 'embed')
-        ? $message->embed(public_path('assets/media/logos/esteca-icon.png'))
-        : asset('assets/media/logos/esteca-icon.png');
+        ? $message->embed(public_path('assets/media/logos/academia-icon.png'))
+        : asset('assets/media/logos/academia-icon.png');
     $cancelado = $motivo === 'cancelacion';
     $etiqueta = [
         'invitacion' => $evento->tipo === 'reunion' ? 'Invitación a reunión' : 'Convocatoria a capacitación',
@@ -29,10 +29,10 @@
                         <table role="presentation" cellspacing="0" cellpadding="0">
                             <tr>
                                 <td style="background:#ffffff; border-radius:8px; padding:4px;">
-                                    <img src="{{ $logo }}" width="44" height="44" alt="{{ config('colegio.nombre') }}" style="display:block; border:0;">
+                                    <img src="{{ $logo }}" width="44" height="44" alt="{{ config('academia.nombre') }}" style="display:block; border:0;">
                                 </td>
                                 <td style="padding-left:14px; color:#ffffff;">
-                                    <div style="font-size:18px; font-weight:bold;">{{ config('colegio.nombre') }}</div>
+                                    <div style="font-size:18px; font-weight:bold;">{{ config('academia.nombre') }}</div>
                                     <div style="font-size:13px; opacity:.85;">Sede {{ $evento->sede->nombre }}</div>
                                 </td>
                             </tr>
@@ -117,9 +117,9 @@
 
                 <tr>
                     <td style="background:#f9f9fb; padding:18px 28px; font-size:12px; line-height:1.6; color:#99a1b7;">
-                        {{ config('colegio.nombre') }} — Sede {{ $evento->sede->nombre }}@if ($evento->sede->direccion), {{ $evento->sede->direccion }}@endif.<br>
+                        {{ config('academia.nombre') }} — Sede {{ $evento->sede->nombre }}@if ($evento->sede->direccion), {{ $evento->sede->direccion }}@endif.<br>
                         @if ($evento->sede->telefono)Teléfono: {{ $evento->sede->telefono }}. @endif
-                        Recibe este correo porque está registrado(a) en el colegio.
+                        Recibe este correo porque está registrado(a) en la academia.
                         <a href="{{ $urlBaja }}" style="color:#99a1b7;">No deseo recibir más correos</a>.
                     </td>
                 </tr>

@@ -24,19 +24,18 @@ return new class extends Migration
             $table->foreignId('sede_id')->nullable()->after('telefono')->constrained('sedes')->nullOnDelete();
         });
 
-        // Padres de familia y catedráticos comparten tabla; "tipo" los distingue
+        // Personas que asisten a las capacitaciones; "tipo" permite abrir otros públicos después
         Schema::create('contactos', function (Blueprint $table) {
             $table->id();
-            $table->string('tipo', 20); // padre | catedratico
+            $table->string('tipo', 20)->default('cliente'); // cliente
             $table->foreignId('sede_id')->constrained('sedes');
             $table->string('nombres', 100);
             $table->string('apellidos', 100);
             $table->string('dpi', 13)->nullable();
             $table->string('correo', 150)->nullable();
             $table->string('telefono', 20)->nullable();
-            $table->string('estudiante', 150)->nullable();    // padres: nombre del estudiante
-            $table->string('grado_seccion', 60)->nullable();  // padres: grado y sección
-            $table->string('area', 100)->nullable();          // catedráticos: curso o área
+            $table->string('empresa', 150)->nullable();  // empresa o ferretería donde trabaja
+            $table->string('oficio', 60)->nullable();    // instalador, contratista, arquitecto…
             $table->boolean('acepta_correos')->default(true);
             $table->uuid('token')->unique();                   // enlaces de confirmación y baja
             $table->timestamps();
@@ -51,7 +50,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre', 100);
             $table->string('descripcion', 255)->nullable();
-            $table->string('tipo', 20); // padre | catedratico | mixto
+            $table->string('tipo', 20)->default('cliente'); // cliente
             $table->foreignId('sede_id')->nullable()->constrained('sedes')->nullOnDelete(); // null = todas las sedes
             $table->timestamps();
 

@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
 
         // Usuario administrador inicial: cambie la contraseña después del primer ingreso.
         $admin = User::firstOrCreate(
-            ['email' => env('ADMIN_EMAIL', 'admin@colegioesteca.edu.gt')],
+            ['email' => env('ADMIN_EMAIL', 'admin@sistegua.com')],
             [
                 'name' => 'Administrador',
                 'apellidos' => 'General',
@@ -31,9 +31,9 @@ class DatabaseSeeder extends Seeder
         );
         $admin->assignRole(User::ROL_ADMINISTRADOR);
 
-        // Datos de demostración: padres, catedráticos, grupos, eventos e invitaciones con asistencia.
+        // Datos de demostración: clientes, grupos, capacitaciones e invitaciones con asistencia.
         $this->call([
-            PadresCatedraticosSeeder::class,
+            ClientesSeeder::class,
             GruposDemoSeeder::class,
             EventosDemoSeeder::class,
         ]);

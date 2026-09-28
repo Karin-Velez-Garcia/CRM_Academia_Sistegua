@@ -147,6 +147,6 @@
     @endif
 
     <div class="text-center text-muted fs-8">
-        ¿No desea recibir más correos del colegio? <a href="{{ route('invitacion.baja', $invitacion->token) }}" class="text-muted text-decoration-underline">Darse de baja</a>
+        ¿No desea recibir más correos de la academia? <a href="{{ route('invitacion.baja', $invitacion->token) }}" class="text-muted text-decoration-underline">Darse de baja</a>
     </div>
 @endsection

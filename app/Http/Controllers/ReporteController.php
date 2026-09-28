@@ -59,7 +59,6 @@ class ReporteController extends Controller implements HasMiddleware
         [$desde, $hasta] = $this->rango($request);
         $filas = $this->consultaEventos($request, $desde, $hasta)->get()->map(fn (Evento $e) => [
             $e->inicio->format('d/m/Y'),
-            $e->tipo === Evento::REUNION ? 'Reunión' : 'Capacitación',
             $e->titulo,
             $e->sede->nombre,
             $e->es_virtual ? 'Virtual' : 'Presencial',
@@ -75,10 +74,10 @@ class ReporteController extends Controller implements HasMiddleware
 
         return ExcelTabla::descargar(
             'Reporte por evento',
-            ['Fecha', 'Tipo', 'Evento', 'Sede', 'Modalidad', 'Estado', 'Invitaciones enviadas', 'Confirmadas', 'No confirmadas', 'Dijeron que no', 'Asistencias', 'Inasistencias', '% asistencia'],
+            ['Fecha', 'Capacitación', 'Sede', 'Modalidad', 'Estado', 'Invitaciones enviadas', 'Confirmadas', 'No confirmadas', 'Dijeron que no', 'Asistencias', 'Inasistencias', '% asistencia'],
             $filas,
             'reporte-eventos-'.$desde->format('Ymd').'-'.$hasta->format('Ymd').'.xlsx',
-            config('colegio.nombre').' · Del '.$desde->format('d/m/Y').' al '.$hasta->format('d/m/Y'),
+            config('academia.nombre').' · Del '.$desde->format('d/m/Y').' al '.$hasta->format('d/m/Y'),
         );
     }
 
@@ -99,9 +98,9 @@ class ReporteController extends Controller implements HasMiddleware
         [$desde, $hasta] = $this->rango($request);
         $filas = $this->consultaPersonas($request, $desde, $hasta)->get()->map(fn (Contacto $c) => [
             $c->nombre_completo,
-            $c->tipo === Contacto::PADRE ? 'Padre de familia' : 'Catedrático',
             $c->sede->nombre,
-            $c->tipo === Contacto::PADRE ? trim($c->estudiante.' '.$c->grado_seccion) : (string) $c->area,
+            (string) $c->empresa,
+            (string) $c->oficio,
             (string) $c->correo,
             (int) $c->convocatorias_count,
             (int) $c->confirmadas_count,
@@ -112,10 +111,10 @@ class ReporteController extends Controller implements HasMiddleware
 
         return ExcelTabla::descargar(
             'Reporte por persona',
-            ['Nombre', 'Tipo', 'Sede', 'Estudiante / curso', 'Correo', 'Convocatorias', 'Confirmó', 'Asistió', 'Faltó', '% asistencia'],
+            ['Nombre', 'Sede', 'Empresa', 'Oficio', 'Correo', 'Convocatorias', 'Confirmó', 'Asistió', 'Faltó', '% asistencia'],
             $filas,
             'reporte-personas-'.$desde->format('Ymd').'-'.$hasta->format('Ymd').'.xlsx',
-            config('colegio.nombre').' · Del '.$desde->format('d/m/Y').' al '.$hasta->format('d/m/Y'),
+            config('academia.nombre').' · Del '.$desde->format('d/m/Y').' al '.$hasta->format('d/m/Y'),
         );
     }
 

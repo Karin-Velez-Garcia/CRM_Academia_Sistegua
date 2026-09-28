@@ -54,10 +54,10 @@ Route::middleware(['auth', 'activo'])->group(function () {
     Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
     Route::put('/perfil/password', [PerfilController::class, 'password'])->name('perfil.password');
 
-    // Colegio
+    // Academia
     Route::resource('sedes', SedeController::class)->except('show');
 
-    // Padres de familia (/contactos/padres) y catedráticos (/contactos/catedraticos)
+    // Clientes (/contactos/clientes)
     Route::prefix('contactos/{tipo}')->whereIn('tipo', array_keys(\App\Models\Contacto::TIPOS))
         ->name('contactos.')->controller(ContactoController::class)->group(function () {
             Route::get('/', 'index')->name('index');
@@ -73,7 +73,7 @@ Route::middleware(['auth', 'activo'])->group(function () {
             Route::delete('/{contacto}', 'destroy')->name('destroy');
         });
 
-    // Reuniones (/eventos/reuniones) y capacitaciones (/eventos/capacitaciones)
+    // Capacitaciones (/eventos/capacitaciones)
     Route::prefix('eventos/{tipo}')->whereIn('tipo', array_keys(\App\Models\Evento::TIPOS))
         ->name('eventos.')->controller(EventoController::class)->group(function () {
             Route::get('/', 'index')->name('index');
@@ -115,7 +115,7 @@ Route::middleware(['auth', 'activo'])->group(function () {
             Route::post('/renovar', 'renovar')->name('.renovar');
         });
 
-    // QR personal: el personal del colegio lo escanea con la cámara del celular en la entrada
+    // QR personal: el personal de la academia lo escanea con la cámara del celular en la entrada
     Route::get('/escaneo/{token}', [RegistroQrController::class, 'escanear'])->whereUuid('token')->name('escaneo.show');
 
     // Constancias de capacitaciones

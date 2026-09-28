@@ -281,11 +281,7 @@ class ContactoController extends Controller implements HasMiddleware
             'grupos' => ['array'],
             'grupos.*' => ['integer'],
         ];
-        if ($tipo === Contacto::PADRE) {
-            $reglas += ['estudiante' => ['nullable', 'string', 'max:150'], 'grado_seccion' => ['nullable', 'string', 'max:60']];
-        } else {
-            $reglas += ['area' => ['nullable', 'string', 'max:100']];
-        }
+        $reglas += ['empresa' => ['nullable', 'string', 'max:150'], 'oficio' => ['nullable', 'string', 'max:60']];
 
         $request->merge(['correo' => $request->filled('correo') ? mb_strtolower(trim($request->input('correo'))) : null]);
 
@@ -294,7 +290,7 @@ class ContactoController extends Controller implements HasMiddleware
             'dpi.unique' => 'Ya hay otro contacto registrado con este DPI.',
             'correo.unique' => 'Ya hay otro contacto registrado con este correo.',
             'sede_id.in' => 'Seleccione una sede válida.',
-        ], ['sede_id' => 'sede', 'grado_seccion' => 'grado y sección', 'area' => 'curso o área', 'dpi' => 'DPI']);
+        ], ['sede_id' => 'sede', 'empresa' => 'empresa', 'oficio' => 'oficio', 'dpi' => 'DPI']);
 
         $datos['acepta_correos'] = $request->boolean('acepta_correos');
         if (! empty($datos['telefono']) && ! str_contains($datos['telefono'], '-')) {

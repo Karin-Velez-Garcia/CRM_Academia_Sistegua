@@ -17,10 +17,10 @@
 <div id="kt_app_sidebar" class="app-sidebar flex-column">
     <div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
         <a href="{{ route('dashboard') }}" class="d-flex align-items-center text-decoration-none">
-            <img alt="{{ config('colegio.nombre') }}" src="{{ asset('assets/media/logos/esteca-icon.png') }}" class="h-40px w-40px rounded me-3">
+            <img alt="{{ config('academia.nombre') }}" src="{{ asset('assets/media/logos/academia-icon.png') }}" class="h-40px w-40px rounded me-3">
             <span class="d-flex flex-column lh-sm">
-                <span class="text-white fw-bold fs-5">Colegio Esteca PC</span>
-                <span class="text-gray-500 fs-8">{{ implode(' · ', config('colegio.sedes')) }}</span>
+                <span class="text-white fw-bold fs-5">{{ config('academia.nombre') }}</span>
+                <span class="text-gray-500 fs-8">{{ implode(' · ', config('academia.sedes')) }}</span>
             </span>
         </a>
         <button type="button" class="btn btn-icon btn-sm d-lg-none text-gray-500" data-sidebar-close aria-label="Cerrar menú">
@@ -35,18 +35,16 @@
                 {!! $item('dashboard', 'dashboard', 'ki-element-11', 'Inicio') !!}
 
                 @canany(['sedes.ver', 'contactos.ver'])
-                    {!! $seccion('Colegio') !!}
+                    {!! $seccion('Academia') !!}
                     @can('sedes.ver') {!! $item('sedes.index', 'sedes.*', 'ki-bank', 'Sedes') !!} @endcan
                     @can('contactos.ver')
-                        {!! $item('contactos.index', 'contactos.*', 'ki-people', 'Padres de familia', ['tipo' => 'padres']) !!}
-                        {!! $item('contactos.index', 'contactos.*', 'ki-teacher', 'Catedráticos', ['tipo' => 'catedraticos']) !!}
+                        {!! $item('contactos.index', 'contactos.*', 'ki-people', 'Clientes', ['tipo' => 'clientes']) !!}
                         {!! $item('grupos.index', 'grupos.*', 'ki-abstract-26', 'Grupos') !!}
                     @endcan
                 @endcanany
 
                 @can('eventos.ver')
-                    {!! $seccion('Eventos') !!}
-                    {!! $item('eventos.index', 'eventos.*', 'ki-calendar', 'Reuniones', ['tipo' => 'reuniones']) !!}
+                    {!! $seccion('Formación') !!}
                     {!! $item('eventos.index', 'eventos.*', 'ki-book-open', 'Capacitaciones', ['tipo' => 'capacitaciones']) !!}
                 @endcan
 

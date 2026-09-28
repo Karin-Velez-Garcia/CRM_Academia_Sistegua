@@ -2,12 +2,12 @@
 
 // Datos institucionales que se muestran en la interfaz, correos y documentos.
 return [
-    'nombre' => env('APP_NAME', 'Colegio Esteca PC'),
-    'siglas' => 'CE',
-    'lema' => 'Comunicación con padres de familia y catedráticos',
-    'sedes' => ['Sanarate', 'Salamá', 'Cobán'],
+    'nombre' => env('APP_NAME', 'Academia Sistegua'),
+    'siglas' => 'AS',
+    'lema' => 'Capacitación técnica en sistemas de construcción liviana',
+    'sedes' => ['Ciudad de Guatemala', 'Quetzaltenango', 'Escuintla'],
 
-    // Recordatorio automático antes de cada evento (se puede apagar por evento)
+    // Recordatorio automático antes de cada capacitación (se puede apagar por evento)
     'recordatorio' => [
         // Por defecto el recordatorio se envía con el botón de la ficha del evento. Activar el envío
         // automático solo en un servidor con la tarea programada (php artisan schedule:run cada minuto).

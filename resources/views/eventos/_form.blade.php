@@ -140,7 +140,7 @@
             @endif
         </div>
 
-        @php($conf = config('colegio.recordatorio'))
+        @php($conf = config('academia.recordatorio'))
         {{-- Solo visible si el envío automático está activado en el servidor; si no, se usa el botón de la ficha --}}
         <div class="bg-light rounded p-5 mt-8" @unless ($conf['automatico']) hidden @endunless>
             <input type="hidden" name="recordatorio_automatico" value="0">

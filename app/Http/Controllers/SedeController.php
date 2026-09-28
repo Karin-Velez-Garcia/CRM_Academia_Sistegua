@@ -28,8 +28,7 @@ class SedeController extends Controller implements HasMiddleware
     {
         $sedes = Sede::with('municipio.departamento')
             ->withCount([
-                'contactos as padres_count' => fn ($q) => $q->where('tipo', Contacto::PADRE),
-                'contactos as catedraticos_count' => fn ($q) => $q->where('tipo', Contacto::CATEDRATICO),
+                'contactos as clientes_count' => fn ($q) => $q->where('tipo', Contacto::CLIENTE),
                 'usuarios',
             ])
             ->orderBy('nombre')->get();

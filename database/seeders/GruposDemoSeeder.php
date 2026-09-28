@@ -8,63 +8,41 @@ use App\Models\Sede;
 use Illuminate\Database\Seeder;
 
 /**
- * Grupos de demostración por sede (padres por nivel, catedráticos) y dos grupos
- * generales de todas las sedes, con sus miembros ya asignados.
+ * Grupos de demostración por sede, segmentados por el oficio del cliente,
+ * más un grupo general de todas las sedes.
  */
 class GruposDemoSeeder extends Seeder
 {
-    private array $niveles = [
-        'Preprimaria' => ['Párvulos 1', 'Párvulos 2', 'Párvulos 3'],
-        'Primaria' => ['Primero Primaria', 'Segundo Primaria', 'Tercero Primaria', 'Cuarto Primaria', 'Quinto Primaria', 'Sexto Primaria'],
-        'Básico' => ['Primero Básico', 'Segundo Básico', 'Tercero Básico'],
+    /** Grupo => oficios que lo componen. */
+    private array $segmentos = [
+        'Instaladores' => ['Instalador de tabla yeso', 'Instalador de cielo falso', 'Instalador independiente'],
+        'Contratistas y obra' => ['Contratista', 'Maestro de obra', 'Supervisor de obra', 'Residente de obra', 'Albañil', 'Carpintero'],
+        'Ferreterías aliadas' => ['Vendedor de ferretería', 'Propietario de ferretería'],
+        'Arquitectos e ingenieros' => ['Arquitecto', 'Ingeniero civil'],
     ];
 
     public function run(): void
     {
         foreach (Sede::all() as $sede) {
-            foreach (array_keys($this->niveles) as $nivel) {
+            foreach ($this->segmentos as $nombre => $oficios) {
                 $grupo = Grupo::firstOrCreate(
-                    ['nombre' => "Padres de {$nivel} - {$sede->nombre}", 'sede_id' => $sede->id],
-                    ['tipo' => Contacto::PADRE, 'descripcion' => "Padres de familia de {$nivel} en la sede {$sede->nombre}."]
+                    ['nombre' => "{$nombre} - {$sede->nombre}", 'sede_id' => $sede->id],
+                    ['tipo' => Contacto::CLIENTE, 'descripcion' => "{$nombre} registrados en la sede {$sede->nombre}."]
                 );
 
-                $grados = $this->niveles[$nivel];
-                $padres = Contacto::tipo(Contacto::PADRE)
-                    ->where('sede_id', $sede->id)
-                    ->where(function ($q) use ($grados) {
-                        foreach ($grados as $grado) {
-                            $q->orWhere('grado_seccion', 'like', "{$grado}%");
-                        }
-                    })
-                    ->pluck('id');
-
-                $grupo->contactos()->sync($padres);
+                $grupo->contactos()->sync(
+                    Contacto::where('sede_id', $sede->id)->whereIn('oficio', $oficios)->pluck('id')
+                );
             }
-
-            $catedraticos = Grupo::firstOrCreate(
-                ['nombre' => "Catedráticos - {$sede->nombre}", 'sede_id' => $sede->id],
-                ['tipo' => Contacto::CATEDRATICO, 'descripcion' => "Cuerpo docente de la sede {$sede->nombre}."]
-            );
-            $catedraticos->contactos()->sync(
-                Contacto::tipo(Contacto::CATEDRATICO)->where('sede_id', $sede->id)->pluck('id')
-            );
         }
 
-        // Grupos generales, de todas las sedes
-        $juntaDirectiva = Grupo::firstOrCreate(
-            ['nombre' => 'Junta Directiva de Padres', 'sede_id' => null],
-            ['tipo' => Contacto::PADRE, 'descripcion' => 'Representantes de padres de familia de las tres sedes.']
+        $certificados = Grupo::firstOrCreate(
+            ['nombre' => 'Instaladores certificados', 'sede_id' => null],
+            ['tipo' => Contacto::CLIENTE, 'descripcion' => 'Clientes que ya completaron la ruta de certificación, de todas las sedes.']
         );
-        $juntaDirectiva->contactos()->sync(
-            Contacto::tipo(Contacto::PADRE)->inRandomOrder()->limit(12)->pluck('id')
-        );
-
-        $cuerpoDocenteGeneral = Grupo::firstOrCreate(
-            ['nombre' => 'Cuerpo Docente General', 'sede_id' => null],
-            ['tipo' => Contacto::CATEDRATICO, 'descripcion' => 'Todos los catedráticos, de las tres sedes.']
-        );
-        $cuerpoDocenteGeneral->contactos()->sync(
-            Contacto::tipo(Contacto::CATEDRATICO)->pluck('id')
+        $certificados->contactos()->sync(
+            Contacto::whereIn('oficio', ['Instalador de tabla yeso', 'Instalador de cielo falso'])
+                ->inRandomOrder()->limit(45)->pluck('id')
         );
     }
 }

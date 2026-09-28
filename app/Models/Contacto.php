@@ -11,35 +11,29 @@ use Illuminate\Support\Str;
 
 class Contacto extends Model
 {
-    public const PADRE = 'padre';
-    public const CATEDRATICO = 'catedratico';
+    public const CLIENTE = 'cliente';
 
     /**
      * Configuración de cada tipo: segmento de la URL, textos y campos propios.
+     * Hoy la academia solo capacita clientes; la estructura admite agregar otro
+     * tipo (p. ej. distribuidores) sin tocar controladores ni rutas.
      */
     public const TIPOS = [
-        'padres' => [
-            'tipo' => self::PADRE,
-            'plural' => 'Padres de familia',
-            'singular' => 'padre de familia',
-            'nuevo' => 'Nuevo padre de familia',
+        'clientes' => [
+            'tipo' => self::CLIENTE,
+            'plural' => 'Clientes',
+            'singular' => 'cliente',
+            'nuevo' => 'Nuevo cliente',
             'icono' => 'ki-people',
-        ],
-        'catedraticos' => [
-            'tipo' => self::CATEDRATICO,
-            'plural' => 'Catedráticos',
-            'singular' => 'catedrático',
-            'nuevo' => 'Nuevo catedrático',
-            'icono' => 'ki-teacher',
         ],
     ];
 
     protected $fillable = [
         'tipo', 'sede_id', 'nombres', 'apellidos', 'dpi', 'correo', 'telefono',
-        'estudiante', 'grado_seccion', 'area', 'acepta_correos',
+        'empresa', 'oficio', 'acepta_correos',
     ];
 
-    protected $attributes = ['acepta_correos' => true];
+    protected $attributes = ['tipo' => self::CLIENTE, 'acepta_correos' => true];
 
     protected function casts(): array
     {
@@ -58,7 +52,7 @@ class Contacto extends Model
 
     public static function segmentoDe(string $tipo): string
     {
-        return $tipo === self::PADRE ? 'padres' : 'catedraticos';
+        return 'clientes';
     }
 
     public function sede(): BelongsTo
@@ -100,7 +94,7 @@ class Contacto extends Model
         // Cada palabra debe aparecer en algún campo: "Juan Pérez" encuentra nombres=Juan, apellidos=Pérez
         foreach (preg_split('/\s+/', trim($texto)) as $palabra) {
             $query->where(function (Builder $q) use ($palabra) {
-                foreach (['nombres', 'apellidos', 'correo', 'dpi', 'telefono', 'estudiante', 'grado_seccion', 'area'] as $campo) {
+                foreach (['nombres', 'apellidos', 'correo', 'dpi', 'telefono', 'empresa', 'oficio'] as $campo) {
                     $q->orWhere($campo, 'like', "%{$palabra}%");
                 }
             });

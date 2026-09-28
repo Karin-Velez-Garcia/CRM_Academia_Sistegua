@@ -29,9 +29,8 @@ class ImportadorContactos
         'correo' => 'correo', 'correo_electronico' => 'correo', 'email' => 'correo', 'e_mail' => 'correo',
         'telefono' => 'telefono', 'celular' => 'telefono', 'telefono_celular' => 'telefono',
         'sede' => 'sede',
-        'estudiante' => 'estudiante', 'nombre_del_estudiante' => 'estudiante', 'alumno' => 'estudiante',
-        'grado_seccion' => 'grado_seccion', 'grado_y_seccion' => 'grado_seccion', 'grado' => 'grado_seccion',
-        'area' => 'area', 'curso' => 'area', 'curso_o_area' => 'area', 'area_o_curso' => 'area',
+        'empresa' => 'empresa', 'nombre_de_la_empresa' => 'empresa', 'negocio' => 'empresa', 'ferreteria' => 'empresa',
+        'oficio' => 'oficio', 'puesto' => 'oficio', 'cargo' => 'oficio', 'profesion' => 'oficio',
         'grupos' => 'grupos', 'grupo' => 'grupos',
     ];
 
@@ -115,12 +114,8 @@ class ImportadorContactos
             'telefono' => $this->telefono($fila['telefono'] ?? null),
         ];
 
-        if ($this->tipo === Contacto::PADRE) {
-            $datos['estudiante'] = $this->texto($fila['estudiante'] ?? null, 150);
-            $datos['grado_seccion'] = $this->texto($fila['grado_seccion'] ?? null, 60);
-        } else {
-            $datos['area'] = $this->texto($fila['area'] ?? null, 100);
-        }
+        $datos['empresa'] = $this->texto($fila['empresa'] ?? null, 150);
+        $datos['oficio'] = $this->texto($fila['oficio'] ?? null, 60);
 
         if (! $datos['nombres'] || ! $datos['apellidos']) {
             throw new FilaInvalida('Faltan los nombres o los apellidos.');

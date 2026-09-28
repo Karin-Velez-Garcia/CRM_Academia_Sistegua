@@ -16,8 +16,8 @@ use Illuminate\View\View;
  * Asistencia por QR:
  *  1) QR del evento (público): se proyecta o imprime en el salón; cada asistente lo escanea
  *     con su celular y se registra con su correo o DPI.
- *  2) QR personal (personal del colegio): viene en la invitación de cada persona; en la entrada
- *     alguien del colegio lo escanea y la asistencia queda marcada.
+ *  2) QR personal (personal de la academia): viene en la invitación de cada persona; en la entrada
+ *     alguien de la academia lo escanea y la asistencia queda marcada.
  */
 class RegistroQrController extends Controller
 {
@@ -59,7 +59,7 @@ class RegistroQrController extends Controller
         ]);
     }
 
-    /** Página para proyectar o imprimir el QR del evento (personal del colegio). */
+    /** Página para proyectar o imprimir el QR del evento (personal de la academia). */
     public function cartel(Request $request, string $tipo, Evento $evento): View
     {
         $this->autorizar($request, $tipo, $evento);
@@ -90,7 +90,7 @@ class RegistroQrController extends Controller
         return back()->with('success', 'Se generó un QR nuevo. El anterior ya no funciona.');
     }
 
-    // ---------------------------------------------------------------- QR personal (lo escanea el colegio)
+    // ---------------------------------------------------------------- QR personal (lo escanea la academia)
 
     public function escanear(Request $request, string $token): View
     {

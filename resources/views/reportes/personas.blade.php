@@ -8,7 +8,7 @@
     <div class="card mb-8">
         <div class="card-body py-5">
             @include('reportes._filtros', [
-                'tipos' => ['padre' => 'Padres de familia', 'catedratico' => 'Catedráticos'],
+                'tipos' => ['cliente' => 'Clientes'],
                 'rutaExcel' => route('reportes.personas.excel', request()->query()),
                 'extra' => new \Illuminate\Support\HtmlString(
                     '<div><label class="form-label fs-7 fw-semibold mb-1">Buscar</label><input type="text" name="buscar" value="'.e(request('buscar')).'" class="form-control form-control-sm form-control-solid" placeholder="Nombre o estudiante"></div>'),
@@ -41,7 +41,7 @@
                                     <span class="text-gray-900 fw-bold">{{ $c->nombre_completo }}</span>
                                 @endcan
                                 <div class="fs-7 text-muted">
-                                    {{ $c->tipo === 'padre' ? trim('Padre/madre · '.$c->estudiante.' '.$c->grado_seccion) : trim('Catedrático · '.$c->area) }}
+                                    {{ trim($c->empresa.' · '.$c->oficio, ' ·') ?: '—' }}
                                 </div>
                             </td>
                             <td>{{ $c->sede->nombre }}</td>

@@ -22,7 +22,7 @@ class Fase5Test extends TestCase
 {
     use RefreshDatabase;
 
-    private Sede $sanarate;
+    private Sede $guatemala;
     private User $admin;
 
     protected function setUp(): void
@@ -30,25 +30,25 @@ class Fase5Test extends TestCase
         parent::setUp();
         $this->seed([GeografiaSeeder::class, SedesSeeder::class, RolesPermisosSeeder::class, PlantillasSeeder::class]);
         Mail::fake();
-        $this->sanarate = Sede::where('nombre', 'Sanarate')->firstOrFail();
-        $this->sanarate->update(['direccion' => 'Barrio El Centro, Sanarate']);
+        $this->guatemala = Sede::where('nombre', 'Ciudad de Guatemala')->firstOrFail();
+        $this->guatemala->update(['direccion' => 'Barrio El Centro, Sanarate']);
         $this->admin = User::factory()->create();
         $this->admin->assignRole(User::ROL_ADMINISTRADOR);
     }
 
-    private function evento(string $tipo = Evento::REUNION, array $datos = []): Evento
+    private function evento(string $tipo = Evento::CAPACITACION, array $datos = []): Evento
     {
         return Evento::create($datos + [
-            'tipo' => $tipo, 'titulo' => $tipo === Evento::REUNION ? 'Reunión general' : 'Taller de evaluación',
-            'sede_id' => $this->sanarate->id, 'modalidad' => Evento::PRESENCIAL, 'lugar' => 'Salón', 'para_todos' => true,
-            'inicio' => now()->subHour(), 'fin' => now()->addHour(), 'facilitador' => $tipo === Evento::CAPACITACION ? 'Lic. Ana Pérez' : null,
+            'tipo' => $tipo, 'titulo' => 'Taller de evaluación',
+            'sede_id' => $this->guatemala->id, 'modalidad' => Evento::PRESENCIAL, 'lugar' => 'Salón', 'para_todos' => true,
+            'inicio' => now()->subHour(), 'fin' => now()->addHour(), 'facilitador' => 'Lic. Ana Pérez',
         ]);
     }
 
-    private function contacto(string $tipo = Contacto::PADRE, array $datos = []): Contacto
+    private function contacto(string $tipo = Contacto::CLIENTE, array $datos = []): Contacto
     {
         return Contacto::create($datos + [
-            'tipo' => $tipo, 'sede_id' => $this->sanarate->id, 'nombres' => 'Nombre'.uniqid(), 'apellidos' => 'Apellido',
+            'tipo' => $tipo, 'sede_id' => $this->guatemala->id, 'nombres' => 'Nombre'.uniqid(), 'apellidos' => 'Apellido',
             'correo' => uniqid().'@correo.com',
         ]);
     }
@@ -61,15 +61,15 @@ class Fase5Test extends TestCase
     public function test_lista_incluye_destinatarios_sin_correo_y_guarda_asistencia(): void
     {
         $evento = $this->evento();
-        $conCorreo = $this->contacto(Contacto::PADRE, ['nombres' => 'Ana']);
-        $sinCorreo = $this->contacto(Contacto::PADRE, ['nombres' => 'Luis', 'correo' => null]);
+        $conCorreo = $this->contacto(Contacto::CLIENTE, ['nombres' => 'Ana']);
+        $sinCorreo = $this->contacto(Contacto::CLIENTE, ['nombres' => 'Luis', 'correo' => null]);
         (new InvitacionesEvento($evento))->invitar('A', 'M', $this->admin);
         Invitacion::where('contacto_id', $conCorreo->id)->update(['respuesta' => Invitacion::CONFIRMADA]);
 
-        $this->actingAs($this->admin)->get(route('asistencia.show', ['reuniones', $evento]))
+        $this->actingAs($this->admin)->get(route('asistencia.show', ['capacitaciones', $evento]))
             ->assertOk()->assertSee('Ana')->assertSee('Luis')->assertSee('Sin correo');
 
-        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['reuniones', $evento]), [
+        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['capacitaciones', $evento]), [
             'contactos' => [$conCorreo->id, $sinCorreo->id],
             'presentes' => [$sinCorreo->id],
         ])->assertSessionHas('success', fn ($m) => str_contains($m, '1 persona presente'));
@@ -81,7 +81,7 @@ class Fase5Test extends TestCase
         $this->assertSame($this->admin->id, $registro->asistencia_por);
 
         // El registro de solo asistencia no cuenta como invitación enviada
-        $this->actingAs($this->admin)->get(route('eventos.show', ['reuniones', $evento]))->assertOk()->assertSee('Control del evento')->assertSee('Llegaron sin invitación');
+        $this->actingAs($this->admin)->get(route('eventos.show', ['capacitaciones', $evento]))->assertOk()->assertSee('Control del evento')->assertSee('Llegaron sin invitación');
     }
 
     public function test_sin_marcar_no_cuenta_como_ausente(): void
@@ -94,7 +94,7 @@ class Fase5Test extends TestCase
             Invitacion::create(['evento_id' => $evento->id, 'contacto_id' => $c->id, 'correo' => $c->correo, 'estado_envio' => 'enviada', 'asistio' => $asistio]);
         }
 
-        $resumen = $this->actingAs($this->admin)->get(route('asistencia.show', ['reuniones', $evento]))->viewData('resumen');
+        $resumen = $this->actingAs($this->admin)->get(route('asistencia.show', ['capacitaciones', $evento]))->viewData('resumen');
         $this->assertSame(1, $resumen['presentes']);
         $this->assertSame(1, $resumen['ausentes']);
         $this->assertSame(1, $resumen['sin_marcar']);
@@ -102,45 +102,45 @@ class Fase5Test extends TestCase
 
     public function test_agregar_asistente_que_llego_sin_invitacion(): void
     {
-        $evento = $this->evento(Evento::REUNION, ['para_todos' => false]); // sin destinatarios
-        $visitante = $this->contacto(Contacto::CATEDRATICO, ['nombres' => 'Pedro']);
-        $otraSede = $this->contacto(Contacto::PADRE, ['sede_id' => Sede::where('nombre', 'Cobán')->value('id')]);
+        $evento = $this->evento(Evento::CAPACITACION, ['para_todos' => false]); // sin destinatarios
+        $visitante = $this->contacto(Contacto::CLIENTE, ['nombres' => 'Pedro']);
+        $otraSede = $this->contacto(Contacto::CLIENTE, ['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
 
-        $this->actingAs($this->admin)->getJson(route('asistencia.buscar', ['reuniones', $evento, 'q' => 'Pedro']))
+        $this->actingAs($this->admin)->getJson(route('asistencia.buscar', ['capacitaciones', $evento, 'q' => 'Pedro']))
             ->assertOk()->assertJsonFragment(['id' => $visitante->id]);
 
-        $this->actingAs($this->admin)->post(route('asistencia.agregar', ['reuniones', $evento]), ['contacto_id' => $visitante->id])
+        $this->actingAs($this->admin)->post(route('asistencia.agregar', ['capacitaciones', $evento]), ['contacto_id' => $visitante->id])
             ->assertSessionHas('success');
         $this->assertTrue(Invitacion::where('contacto_id', $visitante->id)->value('asistio'));
 
-        $this->actingAs($this->admin)->post(route('asistencia.agregar', ['reuniones', $evento]), ['contacto_id' => $otraSede->id])
+        $this->actingAs($this->admin)->post(route('asistencia.agregar', ['capacitaciones', $evento]), ['contacto_id' => $otraSede->id])
             ->assertSessionHasErrors('contacto_id');
 
         // Ya aparece en la lista y no en la búsqueda
-        $this->actingAs($this->admin)->getJson(route('asistencia.buscar', ['reuniones', $evento, 'q' => 'Pedro']))->assertJsonCount(0);
+        $this->actingAs($this->admin)->getJson(route('asistencia.buscar', ['capacitaciones', $evento, 'q' => 'Pedro']))->assertJsonCount(0);
     }
 
     public function test_no_se_marca_asistencia_antes_del_dia_ni_en_cancelados(): void
     {
-        $futuro = $this->evento(Evento::REUNION, ['inicio' => now()->addDays(3), 'fin' => now()->addDays(3)->addHour()]);
+        $futuro = $this->evento(Evento::CAPACITACION, ['inicio' => now()->addDays(3), 'fin' => now()->addDays(3)->addHour()]);
         $c = $this->contacto();
 
-        $this->actingAs($this->admin)->get(route('asistencia.show', ['reuniones', $futuro]))->assertOk()->assertSee('desde el día de la actividad');
-        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['reuniones', $futuro]), ['contactos' => [$c->id], 'presentes' => [$c->id]])
+        $this->actingAs($this->admin)->get(route('asistencia.show', ['capacitaciones', $futuro]))->assertOk()->assertSee('desde el día de la actividad');
+        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['capacitaciones', $futuro]), ['contactos' => [$c->id], 'presentes' => [$c->id]])
             ->assertStatus(422);
 
         $cancelado = $this->evento();
         $cancelado->forceFill(['cancelado_at' => now()])->save();
-        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['reuniones', $cancelado]), ['contactos' => [$c->id], 'presentes' => [$c->id]])
+        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['capacitaciones', $cancelado]), ['contactos' => [$c->id], 'presentes' => [$c->id]])
             ->assertStatus(422);
         $this->assertSame(0, Invitacion::count());
     }
 
     public function test_si_luego_registra_correo_se_puede_invitar(): void
     {
-        $evento = $this->evento(Evento::REUNION, ['inicio' => now()->addHours(2), 'fin' => now()->addHours(4)]);
-        $sinCorreo = $this->contacto(Contacto::PADRE, ['correo' => null]);
-        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['reuniones', $evento]), ['contactos' => [$sinCorreo->id], 'presentes' => []]);
+        $evento = $this->evento(Evento::CAPACITACION, ['inicio' => now()->addHours(2), 'fin' => now()->addHours(4)]);
+        $sinCorreo = $this->contacto(Contacto::CLIENTE, ['correo' => null]);
+        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['capacitaciones', $evento]), ['contactos' => [$sinCorreo->id], 'presentes' => []]);
 
         $sinCorreo->update(['correo' => 'ahora@correo.com']);
         $this->assertSame(1, (new InvitacionesEvento($evento))->invitar('A', 'M', $this->admin));
@@ -150,14 +150,14 @@ class Fase5Test extends TestCase
     public function test_lista_para_firmas_y_excel_de_asistencia(): void
     {
         $evento = $this->evento();
-        $c = $this->contacto(Contacto::PADRE, ['nombres' => 'Rosa', 'apellidos' => 'Morales', 'estudiante' => 'Sofía']);
-        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['reuniones', $evento]), ['contactos' => [$c->id], 'presentes' => [$c->id]]);
+        $c = $this->contacto(Contacto::CLIENTE, ['nombres' => 'Rosa', 'apellidos' => 'Morales', 'empresa' => 'Sofía']);
+        $this->actingAs($this->admin)->post(route('asistencia.guardar', ['capacitaciones', $evento]), ['contactos' => [$c->id], 'presentes' => [$c->id]]);
 
-        $pdf = $this->actingAs($this->admin)->get(route('asistencia.pdf', ['reuniones', $evento]));
+        $pdf = $this->actingAs($this->admin)->get(route('asistencia.pdf', ['capacitaciones', $evento]));
         $pdf->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->assertStringStartsWith('%PDF', $pdf->getContent());
 
-        $xlsx = $this->actingAs($this->admin)->get(route('asistencia.excel', ['reuniones', $evento]));
+        $xlsx = $this->actingAs($this->admin)->get(route('asistencia.excel', ['capacitaciones', $evento]));
         $xlsx->assertOk();
         $ruta = tempnam(sys_get_temp_dir(), 'asi').'.xlsx';
         file_put_contents($ruta, $xlsx->streamedContent());
@@ -170,8 +170,8 @@ class Fase5Test extends TestCase
     public function test_constancias_pdf_verificacion_y_envio(): void
     {
         $taller = $this->evento(Evento::CAPACITACION);
-        $asistio = $this->contacto(Contacto::CATEDRATICO, ['nombres' => 'Luis', 'apellidos' => 'Juárez']);
-        $falto = $this->contacto(Contacto::CATEDRATICO);
+        $asistio = $this->contacto(Contacto::CLIENTE, ['nombres' => 'Luis', 'apellidos' => 'Juárez']);
+        $falto = $this->contacto(Contacto::CLIENTE);
         $this->actingAs($this->admin)->post(route('asistencia.guardar', ['capacitaciones', $taller]), [
             'contactos' => [$asistio->id, $falto->id], 'presentes' => [$asistio->id],
         ]);
@@ -201,14 +201,14 @@ class Fase5Test extends TestCase
 
     public function test_reportes_por_evento_y_por_persona(): void
     {
-        $pasado = $this->evento(Evento::REUNION, ['inicio' => now()->subDays(2), 'fin' => now()->subDays(2)->addHours(2)]);
-        $ana = $this->contacto(Contacto::PADRE, ['nombres' => 'Ana']);
-        $beto = $this->contacto(Contacto::PADRE, ['nombres' => 'Beto']);
+        $pasado = $this->evento(Evento::CAPACITACION, ['inicio' => now()->subDays(2), 'fin' => now()->subDays(2)->addHours(2)]);
+        $ana = $this->contacto(Contacto::CLIENTE, ['nombres' => 'Ana']);
+        $beto = $this->contacto(Contacto::CLIENTE, ['nombres' => 'Beto']);
         Invitacion::create(['evento_id' => $pasado->id, 'contacto_id' => $ana->id, 'correo' => $ana->correo, 'estado_envio' => 'enviada', 'respuesta' => 'confirmada', 'asistio' => true]);
         Invitacion::create(['evento_id' => $pasado->id, 'contacto_id' => $beto->id, 'correo' => $beto->correo, 'estado_envio' => 'enviada', 'asistio' => false]);
 
         $this->actingAs($this->admin)->get(route('reportes.eventos'))
-            ->assertOk()->assertSee('Reunión general')->assertSee('50%');
+            ->assertOk()->assertSee('Taller de evaluación')->assertSee('50%');
 
         $resp = $this->actingAs($this->admin)->get(route('reportes.personas'));
         $resp->assertOk()->assertSeeInOrder([$beto->nombre_completo, $ana->nombre_completo]); // primero quien menos asistió
@@ -217,18 +217,18 @@ class Fase5Test extends TestCase
         $ruta = tempnam(sys_get_temp_dir(), 'rep').'.xlsx';
         file_put_contents($ruta, $xlsx->streamedContent());
         $filas = IOFactory::load($ruta)->getSheet(0)->toArray();
-        $this->assertSame('Reunión general', $filas[4][2]);
-        $this->assertEquals(2, $filas[4][6]);   // invitaciones enviadas
-        $this->assertEquals(1, $filas[4][7]);   // confirmadas
-        $this->assertEquals(1, $filas[4][8]);   // no confirmadas
-        $this->assertEquals(1, $filas[4][10]);  // asistencias
-        $this->assertEquals(1, $filas[4][11]);  // inasistencias
-        $this->assertSame('50%', $filas[4][12]);
+        $this->assertSame('Taller de evaluación', $filas[4][1]);
+        $this->assertEquals(2, $filas[4][5]);   // invitaciones enviadas
+        $this->assertEquals(1, $filas[4][6]);   // confirmadas
+        $this->assertEquals(1, $filas[4][7]);   // no confirmadas
+        $this->assertEquals(1, $filas[4][9]);   // asistencias
+        $this->assertEquals(1, $filas[4][10]);  // inasistencias
+        $this->assertSame('50%', $filas[4][11]);
 
         $this->actingAs($this->admin)->get(route('reportes.personas.excel'))->assertOk();
 
         // Historial en la ficha del contacto
-        $this->actingAs($this->admin)->get(route('contactos.edit', ['padres', $ana]))->assertOk()->assertSee('Historial de participación')->assertSee('Asistió');
+        $this->actingAs($this->admin)->get(route('contactos.edit', ['clientes', $ana]))->assertOk()->assertSee('Historial de participación')->assertSee('Asistió');
     }
 
     public function test_permisos_de_asistencia_y_reportes(): void
@@ -237,13 +237,13 @@ class Fase5Test extends TestCase
         $secretaria = User::factory()->create();
         $secretaria->assignRole('Secretaría');
 
-        $this->actingAs($secretaria)->get(route('asistencia.show', ['reuniones', $evento]))->assertOk();
+        $this->actingAs($secretaria)->get(route('asistencia.show', ['capacitaciones', $evento]))->assertOk();
         $this->actingAs($secretaria)->get(route('reportes.eventos'))->assertOk();
         $this->actingAs($secretaria)->get(route('reportes.eventos.excel'))->assertForbidden();
 
-        $directorCoban = User::factory()->create(['sede_id' => Sede::where('nombre', 'Cobán')->value('id')]);
+        $directorCoban = User::factory()->create(['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
         $directorCoban->assignRole('Director de sede');
-        $this->actingAs($directorCoban)->get(route('asistencia.show', ['reuniones', $evento]))->assertForbidden();
+        $this->actingAs($directorCoban)->get(route('asistencia.show', ['capacitaciones', $evento]))->assertForbidden();
         $this->actingAs($directorCoban)->get(route('reportes.eventos'))->assertOk()->assertDontSee('Reunión general');
     }
 }

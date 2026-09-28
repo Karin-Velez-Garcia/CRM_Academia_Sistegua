@@ -20,32 +20,24 @@ class ExcelContactos
 {
     public static function columnas(string $tipo): array
     {
-        $propias = $tipo === Contacto::PADRE
-            ? ['estudiante' => 'Estudiante', 'grado_seccion' => 'Grado y sección']
-            : ['area' => 'Curso o área'];
-
         return ['nombres' => 'Nombres', 'apellidos' => 'Apellidos', 'dpi' => 'DPI', 'correo' => 'Correo',
-            'telefono' => 'Teléfono', 'sede' => 'Sede'] + $propias + ['grupos' => 'Grupos'];
+            'telefono' => 'Teléfono', 'sede' => 'Sede', 'empresa' => 'Empresa', 'oficio' => 'Oficio',
+            'grupos' => 'Grupos'];
     }
 
     public static function plantilla(string $tipo): StreamedResponse
     {
         $libro = new Spreadsheet();
         $hoja = $libro->getActiveSheet();
-        $hoja->setTitle($tipo === Contacto::PADRE ? 'Padres de familia' : 'Catedráticos');
+        $hoja->setTitle('Clientes');
         $columnas = self::columnas($tipo);
         self::encabezados($hoja, $columnas);
 
         $sedes = Sede::activas()->orderBy('nombre')->pluck('nombre');
-        $ejemplos = $tipo === Contacto::PADRE
-            ? [
-                ['María José', 'García López', '2584736910207', 'mariajose.garcia@correo.com', '5874-3210', $sedes[0] ?? '', 'Ana Lucía Pérez García', '3.º Básico A', 'Padres 3.º Básico'],
-                ['Carlos Enrique', 'Pérez Ramírez', '', 'carlos.perez@correo.com', '4478-5632', $sedes[1] ?? '', 'Diego Pérez Morales', '1.º Primaria B', ''],
-            ]
-            : [
-                ['Luis Fernando', 'Morales Cruz', '2145678901601', 'luis.morales@correo.com', '4567-8123', $sedes[0] ?? '', 'Matemática', 'Claustro básico'],
-                ['Ana Beatriz', 'Chen Rodríguez', '', 'ana.chen@correo.com', '3012-3456', $sedes[2] ?? '', 'Ciencias Naturales', ''],
-            ];
+        $ejemplos = [
+            ['Luis Fernando', 'Morales Cruz', '2145678901601', 'luis.morales@correo.com', '4567-8123', $sedes[0] ?? '', 'Constructora Morales', 'Contratista', 'Instaladores certificados'],
+            ['Ana Beatriz', 'Chen Rodríguez', '', 'ana.chen@correo.com', '3012-3456', $sedes[1] ?? '', 'Ferretería El Progreso', 'Ferretería', ''],
+        ];
         self::filas($hoja, $ejemplos, 2);
 
         // Lista desplegable de sedes en la columna "Sede" (filas 2 a 1000)
@@ -68,7 +60,7 @@ class ExcelContactos
             ['• Correo: necesario para recibir invitaciones. No se permite el mismo correo dos veces.'],
             ['• DPI: 13 dígitos, sin espacios ni guiones (opcional).'],
             ['• Teléfono: 8 dígitos, por ejemplo 5874-3210 (opcional).'],
-            ['• Grupos: nombres separados por coma, por ejemplo "Padres 3.º Básico, Comité de padres". Si el grupo no existe, se crea.'],
+            ['• Grupos: nombres separados por coma, por ejemplo "Instaladores certificados, Contratistas zona 12". Si el grupo no existe, se crea.'],
             ['• Si una persona ya existe (mismo correo o DPI), sus datos se actualizan con lo que venga lleno en el archivo.'],
             ['• Borre las filas de ejemplo antes de subir el archivo.'],
         ];
@@ -79,7 +71,7 @@ class ExcelContactos
         $info->getColumnDimension('A')->setWidth(110);
 
         $libro->setActiveSheetIndex(0);
-        $nombre = $tipo === Contacto::PADRE ? 'plantilla_padres_de_familia.xlsx' : 'plantilla_catedraticos.xlsx';
+        $nombre = 'plantilla_clientes.xlsx';
 
         return self::descargar($libro, $nombre);
     }
@@ -89,7 +81,7 @@ class ExcelContactos
     {
         $libro = new Spreadsheet();
         $hoja = $libro->getActiveSheet();
-        $hoja->setTitle($tipo === Contacto::PADRE ? 'Padres de familia' : 'Catedráticos');
+        $hoja->setTitle('Clientes');
         $columnas = self::columnas($tipo) + ['acepta_correos' => 'Acepta correos'];
         self::encabezados($hoja, $columnas);
 
@@ -104,7 +96,7 @@ class ExcelContactos
         self::filas($hoja, $filas, 2);
         $hoja->setAutoFilter($hoja->calculateWorksheetDimension());
 
-        $prefijo = $tipo === Contacto::PADRE ? 'padres_de_familia' : 'catedraticos';
+        $prefijo = 'clientes';
 
         return self::descargar($libro, $prefijo.'_'.now()->format('Y-m-d').'.xlsx');
     }
@@ -115,7 +107,7 @@ class ExcelContactos
         foreach ($columnas as $campo => $titulo) {
             $letra = self::letra($i++);
             $hoja->setCellValue("{$letra}1", $titulo);
-            $hoja->getColumnDimension($letra)->setWidth(in_array($campo, ['correo', 'estudiante', 'grupos']) ? 32 : 20);
+            $hoja->getColumnDimension($letra)->setWidth(in_array($campo, ['correo', 'empresa', 'grupos']) ? 32 : 20);
             // DPI y teléfono como texto para que Excel no los convierta en números
             if (in_array($campo, ['dpi', 'telefono'])) {
                 $hoja->getStyle("{$letra}2:{$letra}5000")->getNumberFormat()->setFormatCode('@');

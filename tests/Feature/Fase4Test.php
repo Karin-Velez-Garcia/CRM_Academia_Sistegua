@@ -23,7 +23,7 @@ class Fase4Test extends TestCase
 {
     use RefreshDatabase;
 
-    private Sede $sanarate;
+    private Sede $guatemala;
     private User $admin;
     private Evento $reunion;
 
@@ -33,13 +33,13 @@ class Fase4Test extends TestCase
         $this->seed([GeografiaSeeder::class, SedesSeeder::class, RolesPermisosSeeder::class, PlantillasSeeder::class]);
         Mail::fake();
 
-        $this->sanarate = Sede::where('nombre', 'Sanarate')->firstOrFail();
-        $this->sanarate->update(['direccion' => '3a. Calle 2-45, Zona 1, Sanarate']);
+        $this->guatemala = Sede::where('nombre', 'Ciudad de Guatemala')->firstOrFail();
+        $this->guatemala->update(['direccion' => '3a. Calle 2-45, Zona 1, Ciudad de Guatemala']);
         $this->admin = User::factory()->create();
         $this->admin->assignRole(User::ROL_ADMINISTRADOR);
 
         $this->reunion = Evento::create([
-            'tipo' => Evento::REUNION, 'titulo' => 'Entrega de notas', 'sede_id' => $this->sanarate->id,
+            'tipo' => Evento::CAPACITACION, 'titulo' => 'Instalación de tabla yeso', 'sede_id' => $this->guatemala->id,
             'modalidad' => Evento::PRESENCIAL, 'lugar' => 'Salón principal', 'para_todos' => true,
             'inicio' => now()->addWeek()->setTime(15, 0), 'fin' => now()->addWeek()->setTime(17, 0),
         ]);
@@ -48,8 +48,8 @@ class Fase4Test extends TestCase
     private function padre(array $datos = []): Contacto
     {
         return Contacto::create($datos + [
-            'tipo' => Contacto::PADRE, 'sede_id' => $this->sanarate->id,
-            'nombres' => 'María', 'apellidos' => 'García', 'correo' => uniqid().'@correo.com', 'estudiante' => 'Ana',
+            'tipo' => Contacto::CLIENTE, 'sede_id' => $this->guatemala->id,
+            'nombres' => 'María', 'apellidos' => 'García', 'correo' => uniqid().'@correo.com', 'empresa' => 'Ana',
         ]);
     }
 
@@ -59,7 +59,7 @@ class Fase4Test extends TestCase
 
         return $this->actingAs($this->admin)->post(
             route('invitaciones.enviar', [Evento::segmentoDe($evento->tipo), $evento]),
-            $datos + ['asunto' => 'Invitación: {titulo}', 'mensaje' => "Estimado(a) {nombre}:\nLe esperamos el {fecha}. Estudiante: {estudiante}."]
+            $datos + ['asunto' => 'Invitación: {titulo}', 'mensaje' => "Estimado(a) {nombre}:\nLe esperamos el {fecha}. Empresa: {empresa}."]
         );
     }
 
@@ -81,9 +81,9 @@ class Fase4Test extends TestCase
             $html = $mail->render();
 
             return $mail->hasTo($maria->correo)
-                && $mail->asuntoFinal === 'Invitación: Entrega de notas'
+                && $mail->asuntoFinal === 'Invitación: Instalación de tabla yeso'
                 && str_contains($mail->mensajeFinal, 'Estimado(a) María García')
-                && str_contains($mail->mensajeFinal, 'Estudiante: Ana')
+                && str_contains($mail->mensajeFinal, 'Empresa: Ana')
                 && str_contains($html, $inv->url('si'))
                 && str_contains($html, 'Salón principal')
                 && count($mail->attachments()) === 1;
@@ -110,7 +110,7 @@ class Fase4Test extends TestCase
         $inv = Invitacion::sole();
 
         // Abrir el enlace no responde solo; solo marca que la vio
-        $this->get($inv->url('si'))->assertOk()->assertSee('Entrega de notas')->assertSee('Sí, asistiré');
+        $this->get($inv->url('si'))->assertOk()->assertSee('Instalación de tabla yeso')->assertSee('Sí, asistiré');
         $this->assertNotNull($inv->fresh()->vista_at);
         $this->assertNull($inv->fresh()->respuesta);
 
@@ -125,7 +125,7 @@ class Fase4Test extends TestCase
         $this->post(route('invitacion.responder', $inv->token), ['respuesta' => 'rechazada']);
         $this->assertSame(Invitacion::RECHAZADA, $inv->fresh()->respuesta);
 
-        $this->actingAs($this->admin)->get(route('eventos.show', ['reuniones', $this->reunion]))
+        $this->actingAs($this->admin)->get(route('eventos.show', ['capacitaciones', $this->reunion]))
             ->assertOk()->assertSee('No asistirán');
     }
 
@@ -146,12 +146,12 @@ class Fase4Test extends TestCase
     public function test_cupo_lleno_en_capacitacion(): void
     {
         $capacitacion = Evento::create([
-            'tipo' => Evento::CAPACITACION, 'titulo' => 'Taller', 'sede_id' => $this->sanarate->id, 'cupo' => 1,
+            'tipo' => Evento::CAPACITACION, 'titulo' => 'Taller', 'sede_id' => $this->guatemala->id, 'cupo' => 1,
             'modalidad' => Evento::VIRTUAL, 'enlace' => 'https://zoom.us/j/123', 'para_todos' => true,
             'inicio' => now()->addDays(2), 'fin' => now()->addDays(2)->addHours(2),
         ]);
         foreach (range(1, 2) as $n) {
-            Contacto::create(['tipo' => Contacto::CATEDRATICO, 'sede_id' => $this->sanarate->id, 'nombres' => "Docente $n", 'apellidos' => 'X', 'correo' => "d$n@correo.com"]);
+            Contacto::create(['tipo' => Contacto::CLIENTE, 'sede_id' => $this->guatemala->id, 'nombres' => "Docente $n", 'apellidos' => 'X', 'correo' => "d$n@correo.com"]);
         }
         $this->enviar($capacitacion);
         [$primera, $segunda] = Invitacion::orderBy('id')->get()->all();
@@ -172,7 +172,7 @@ class Fase4Test extends TestCase
         $respondio->update(['respuesta' => Invitacion::CONFIRMADA]);
 
         // Solo el grupo "sin respuesta"
-        $this->actingAs($this->admin)->post(route('invitaciones.recordar', ['reuniones', $this->reunion]), [
+        $this->actingAs($this->admin)->post(route('invitaciones.recordar', ['capacitaciones', $this->reunion]), [
             'incluir' => ['sin_respuesta'],
             'sin_respuesta' => ['asunto' => 'Recordatorio: {titulo}', 'mensaje' => 'Hola {nombres}'],
         ])->assertSessionHas('success', fn ($m) => str_contains($m, '1 sin respuesta'));
@@ -180,18 +180,18 @@ class Fase4Test extends TestCase
         $this->assertNull($respondio->fresh()->recordatorio_at);
         $this->assertNotNull(Invitacion::whereNull('respuesta')->sole()->recordatorio_at);
         $this->assertNotNull($this->reunion->fresh()->recordatorio_enviado_at);
-        Mail::assertSent(CorreoEvento::class, fn ($m) => $m->motivo === 'recordatorio' && $m->asuntoFinal === 'Recordatorio: Entrega de notas');
+        Mail::assertSent(CorreoEvento::class, fn ($m) => $m->motivo === 'recordatorio' && $m->asuntoFinal === 'Recordatorio: Instalación de tabla yeso');
         Mail::assertSent(CorreoEvento::class, 3); // 2 invitaciones + 1 recordatorio
 
         // Los dos grupos, con los textos por defecto si se dejan vacíos
-        $this->actingAs($this->admin)->post(route('invitaciones.recordar', ['reuniones', $this->reunion]), [
+        $this->actingAs($this->admin)->post(route('invitaciones.recordar', ['capacitaciones', $this->reunion]), [
             'incluir' => ['sin_respuesta', 'confirmados'],
             'confirmados' => ['asunto' => '', 'mensaje' => ''],
         ])->assertSessionHas('success', fn ($m) => str_contains($m, '1 sin respuesta y 1 que confirmaron'));
         Mail::assertSent(CorreoEvento::class, fn ($m) => $m->hasTo($respondio->correo) && str_starts_with($m->asuntoFinal, 'Le esperamos'));
 
         // Sin elegir grupo
-        $this->actingAs($this->admin)->post(route('invitaciones.recordar', ['reuniones', $this->reunion]), [])
+        $this->actingAs($this->admin)->post(route('invitaciones.recordar', ['capacitaciones', $this->reunion]), [])
             ->assertSessionHasErrors('incluir');
     }
 
@@ -203,22 +203,22 @@ class Fase4Test extends TestCase
         Invitacion::where('contacto_id', $noVa->id)->update(['respuesta' => Invitacion::RECHAZADA]);
 
         // Cambio de hora con aviso: solo a quien no dijo que no
-        $this->actingAs($this->admin)->put(route('eventos.update', ['reuniones', $this->reunion]), [
-            'titulo' => 'Entrega de notas', 'sede_id' => $this->sanarate->id, 'modalidad' => 'presencial', 'lugar' => 'Salón principal',
+        $this->actingAs($this->admin)->put(route('eventos.update', ['capacitaciones', $this->reunion]), [
+            'titulo' => 'Instalación de tabla yeso', 'sede_id' => $this->guatemala->id, 'modalidad' => 'presencial', 'lugar' => 'Salón principal',
             'fecha' => $this->reunion->inicio->format('Y-m-d'), 'hora_inicio' => '16:00', 'hora_fin' => '18:00',
             'para_todos' => '1', 'avisar_cambio' => '1',
         ])->assertSessionHas('success', fn ($m) => str_contains($m, 'a 1 invitados'));
         Mail::assertSent(CorreoEvento::class, fn ($m) => $m->motivo === 'cambio');
 
         // Solo cambiar el título no avisa
-        $this->actingAs($this->admin)->put(route('eventos.update', ['reuniones', $this->reunion]), [
-            'titulo' => 'Entrega de notas (3er bimestre)', 'sede_id' => $this->sanarate->id, 'modalidad' => 'presencial', 'lugar' => 'Salón principal',
+        $this->actingAs($this->admin)->put(route('eventos.update', ['capacitaciones', $this->reunion]), [
+            'titulo' => 'Instalación de tabla yeso (módulo 2)', 'sede_id' => $this->guatemala->id, 'modalidad' => 'presencial', 'lugar' => 'Salón principal',
             'fecha' => $this->reunion->inicio->format('Y-m-d'), 'hora_inicio' => '16:00', 'hora_fin' => '18:00',
             'para_todos' => '1', 'avisar_cambio' => '1',
         ]);
         $this->assertSame(1, Envio::where('motivo', 'cambio')->count());
 
-        $this->actingAs($this->admin)->patch(route('eventos.cancelar', ['reuniones', $this->reunion]), ['motivo' => 'Feriado', 'avisar' => '1'])
+        $this->actingAs($this->admin)->patch(route('eventos.cancelar', ['capacitaciones', $this->reunion]), ['motivo' => 'Feriado', 'avisar' => '1'])
             ->assertSessionHas('success', fn ($m) => str_contains($m, 'Se avisó por correo a 1'));
         Mail::assertSent(CorreoEvento::class, fn ($m) => $m->motivo === 'cancelacion'
             && str_contains($m->mensajeFinal, 'Motivo: Feriado')
@@ -231,16 +231,16 @@ class Fase4Test extends TestCase
         $this->enviar();
         $inv = Invitacion::sole();
 
-        $this->actingAs($this->admin)->patch(route('invitaciones.responder', ['reuniones', $this->reunion, $inv]), ['respuesta' => 'confirmada'])
+        $this->actingAs($this->admin)->patch(route('invitaciones.responder', ['capacitaciones', $this->reunion, $inv]), ['respuesta' => 'confirmada'])
             ->assertSessionHas('success');
         $this->assertSame('personal', $inv->fresh()->respuesta_por);
 
-        $this->actingAs($this->admin)->patch(route('invitaciones.responder', ['reuniones', $this->reunion, $inv]), ['respuesta' => '']);
+        $this->actingAs($this->admin)->patch(route('invitaciones.responder', ['capacitaciones', $this->reunion, $inv]), ['respuesta' => '']);
         $this->assertNull($inv->fresh()->respuesta);
 
         // Corrige el correo y reenvía
         $p->update(['correo' => 'nuevo@correo.com']);
-        $this->actingAs($this->admin)->post(route('invitaciones.reenviar', ['reuniones', $this->reunion, $inv]))->assertSessionHas('success');
+        $this->actingAs($this->admin)->post(route('invitaciones.reenviar', ['capacitaciones', $this->reunion, $inv]))->assertSessionHas('success');
         $this->assertSame('nuevo@correo.com', $inv->fresh()->correo);
         Mail::assertSent(CorreoEvento::class, fn ($m) => $m->hasTo('nuevo@correo.com'));
     }
@@ -273,22 +273,25 @@ class Fase4Test extends TestCase
     {
         $this->padre(['nombres' => 'Rosa', 'apellidos' => 'Morales']);
 
-        $this->actingAs($this->admin)->get(route('invitaciones.vista-previa', ['reuniones', $this->reunion, 'mensaje' => 'Hola {nombre}']))
+        $this->actingAs($this->admin)->get(route('invitaciones.vista-previa', ['capacitaciones', $this->reunion, 'mensaje' => 'Hola {nombre}']))
             ->assertOk()->assertSee('Hola Rosa Morales')->assertSee('Confirmo asistencia');
 
         // Plantillas: solo una predeterminada por tipo; no se puede borrar la última
         $this->actingAs($this->admin)->post(route('plantillas.store'), [
-            'nombre' => 'Otra', 'tipo_evento' => 'reunion', 'asunto' => 'A', 'mensaje' => 'M', 'predeterminada' => '1',
+            'nombre' => 'Otra', 'tipo_evento' => 'capacitacion', 'asunto' => 'A', 'mensaje' => 'M', 'predeterminada' => '1',
         ])->assertRedirect(route('plantillas.index'));
-        $this->assertSame(1, Plantilla::where('tipo_evento', 'reunion')->where('predeterminada', true)->count());
-        $this->assertSame('Otra', Plantilla::predeterminadaPara('reunion')->nombre);
+        $this->assertSame(1, Plantilla::where('tipo_evento', 'capacitacion')->where('predeterminada', true)->count());
+        $this->assertSame('Otra', Plantilla::predeterminadaPara('capacitacion')->nombre);
+
+        // No se puede borrar la última plantilla que queda del tipo
+        Plantilla::where('nombre', '!=', 'Otra')->delete();
         $unica = Plantilla::where('tipo_evento', 'capacitacion')->sole();
         $this->actingAs($this->admin)->delete(route('plantillas.destroy', $unica))->assertSessionHas('error');
 
         // Director de otra sede no ve ni envía
-        $director = User::factory()->create(['sede_id' => Sede::where('nombre', 'Cobán')->value('id')]);
+        $director = User::factory()->create(['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
         $director->assignRole('Director de sede');
-        $this->actingAs($director)->post(route('invitaciones.enviar', ['reuniones', $this->reunion]), ['asunto' => 'A', 'mensaje' => 'M'])->assertForbidden();
+        $this->actingAs($director)->post(route('invitaciones.enviar', ['capacitaciones', $this->reunion]), ['asunto' => 'A', 'mensaje' => 'M'])->assertForbidden();
 
         $this->actingAs($this->admin)->get(route('invitaciones.index'))->assertOk();
         $this->actingAs($this->admin)->get(route('plantillas.index'))->assertOk()->assertSee('Otra');
@@ -296,11 +299,11 @@ class Fase4Test extends TestCase
 
     public function test_grupos_de_otra_sede_no_reciben(): void
     {
-        $grupo = Grupo::create(['nombre' => 'Todos los comités', 'tipo' => Contacto::PADRE, 'sede_id' => null]);
+        $grupo = Grupo::create(['nombre' => 'Todos los comités', 'tipo' => Contacto::CLIENTE, 'sede_id' => null]);
         $this->reunion->update(['para_todos' => false]);
         $this->reunion->grupos()->sync([$grupo->id]);
         $local = $this->padre();
-        $otra = $this->padre(['sede_id' => Sede::where('nombre', 'Cobán')->value('id')]);
+        $otra = $this->padre(['sede_id' => Sede::where('nombre', 'Escuintla')->value('id')]);
         $grupo->contactos()->attach([$local->id, $otra->id]);
 
         $this->enviar();

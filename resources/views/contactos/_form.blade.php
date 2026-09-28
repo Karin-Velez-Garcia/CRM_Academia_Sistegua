@@ -1,5 +1,4 @@
 @php
-    $esPadre = $config['tipo'] === \App\Models\Contacto::PADRE;
     $gruposMarcados = collect(old('grupos', $contacto->exists ? $contacto->grupos->pluck('id')->all() : []))->map(fn ($id) => (int) $id)->all();
 @endphp
 <div class="card">
@@ -39,7 +38,7 @@
             </div>
         </div>
 
-        <h4 class="fw-bold text-gray-800 mb-5">{{ $esPadre ? 'Estudiante' : 'Información académica' }}</h4>
+        <h4 class="fw-bold text-gray-800 mb-5">Datos del cliente</h4>
         <div class="row g-6 mb-10">
             <div class="col-md-4">
                 <label for="sede_id" class="required form-label fw-semibold">Sede</label>
@@ -51,28 +50,19 @@
                 </select>
                 @error('sede_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
-            @if ($esPadre)
-                <div class="col-md-5">
-                    <label for="estudiante" class="form-label fw-semibold">Nombre del estudiante</label>
-                    <input id="estudiante" name="estudiante" value="{{ old('estudiante', $contacto->estudiante) }}" maxlength="150"
-                           class="form-control form-control-solid @error('estudiante') is-invalid @enderror">
-                    @error('estudiante') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    <div class="form-text">Si tiene varios hijos en el colegio, sepárelos con coma.</div>
-                </div>
-                <div class="col-md-3">
-                    <label for="grado_seccion" class="form-label fw-semibold">Grado y sección</label>
-                    <input id="grado_seccion" name="grado_seccion" value="{{ old('grado_seccion', $contacto->grado_seccion) }}" maxlength="60"
-                           class="form-control form-control-solid @error('grado_seccion') is-invalid @enderror" placeholder="3.º Básico A">
-                    @error('grado_seccion') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-            @else
-                <div class="col-md-8">
-                    <label for="area" class="form-label fw-semibold">Curso o área que imparte</label>
-                    <input id="area" name="area" value="{{ old('area', $contacto->area) }}" maxlength="100"
-                           class="form-control form-control-solid @error('area') is-invalid @enderror" placeholder="Matemática, Ciencias Naturales…">
-                    @error('area') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-            @endif
+            <div class="col-md-5">
+                <label for="empresa" class="form-label fw-semibold">Empresa o negocio</label>
+                <input id="empresa" name="empresa" value="{{ old('empresa', $contacto->empresa) }}" maxlength="150"
+                       class="form-control form-control-solid @error('empresa') is-invalid @enderror" placeholder="Constructora, ferretería…">
+                @error('empresa') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <div class="form-text">Déjelo vacío si trabaja de forma independiente.</div>
+            </div>
+            <div class="col-md-3">
+                <label for="oficio" class="form-label fw-semibold">Oficio</label>
+                <input id="oficio" name="oficio" value="{{ old('oficio', $contacto->oficio) }}" maxlength="60"
+                       class="form-control form-control-solid @error('oficio') is-invalid @enderror" placeholder="Instalador, contratista…">
+                @error('oficio') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
         </div>
 
         <h4 class="fw-bold text-gray-800 mb-5">Grupos y comunicación</h4>

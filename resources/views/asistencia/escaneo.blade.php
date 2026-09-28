@@ -22,7 +22,7 @@
                 <h1 class="fs-1 fw-bold text-{{ $color }} mb-4">{{ $titulo }}</h1>
                 <div class="fs-2 fw-bold text-gray-900">{{ $c->nombre_completo }}</div>
                 <div class="text-gray-600 fs-6 mt-1">
-                    {{ $c->tipo === 'padre' ? trim('Padre/madre · '.$c->estudiante.' '.$c->grado_seccion) : trim('Catedrático · '.$c->area) }}
+                    {{ trim($c->empresa.' · '.$c->oficio, ' ·') }}
                 </div>
                 @if ($invitacion->respuesta)
                     <span class="badge badge-light-{{ $invitacion->respuesta === 'confirmada' ? 'success' : 'danger' }} mt-4">

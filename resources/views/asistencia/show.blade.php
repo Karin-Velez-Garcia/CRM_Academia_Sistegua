@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @php
-    $esPadre = $config['publico'] === \App\Models\Contacto::PADRE;
     $esCapacitacion = $evento->tipo === \App\Models\Evento::CAPACITACION;
 @endphp
 
@@ -64,7 +63,7 @@
                 <i class="ki-outline ki-award fs-2x text-primary"></i>
                 <div class="flex-grow-1">
                     <div class="fw-bold text-gray-900">Constancias de participación</div>
-                    <div class="text-muted fs-7">{{ $resumen['presentes'] }} {{ $resumen['presentes'] === 1 ? 'catedrático asistió' : 'catedráticos asistieron' }}. Cada constancia lleva un código para verificarla.</div>
+                    <div class="text-muted fs-7">{{ $resumen['presentes'] }} {{ $resumen['presentes'] === 1 ? 'cliente asistió' : 'clientes asistieron' }}. Cada constancia lleva un código para verificarla.</div>
                 </div>
                 <a href="{{ route('constancias.todas', $evento) }}" class="btn btn-sm btn-light-primary"><i class="ki-outline ki-file-down fs-3"></i> Descargar todas (PDF)</a>
                 @can('campanias.enviar')
@@ -98,7 +97,7 @@
                 <div class="d-flex flex-wrap align-items-center gap-3 bg-light rounded p-4">
                     <span class="fw-semibold text-gray-700 fs-7">¿Llegó alguien que no está en la lista?</span>
                     <div class="position-relative flex-grow-1 mw-400px">
-                        <input type="text" class="form-control form-control-sm form-control-solid" placeholder="Buscar por nombre, DPI o estudiante…"
+                        <input type="text" class="form-control form-control-sm form-control-solid" placeholder="Buscar por nombre, DPI, empresa u oficio…"
                                data-buscar-asistente="{{ route('asistencia.buscar', [$segmento, $evento]) }}" autocomplete="off">
                         <div class="dropdown-menu w-100 shadow" data-resultados></div>
                     </div>
@@ -126,8 +125,8 @@
                         <thead>
                         <tr class="text-muted fw-bold fs-7 text-uppercase">
                             <th class="w-100px text-center">Presente</th>
-                            <th class="min-w-200px">{{ $esPadre ? 'Padre o madre' : 'Catedrático' }}</th>
-                            <th>{{ $esPadre ? 'Estudiante' : 'Curso o área' }}</th>
+                            <th class="min-w-200px">Cliente</th>
+                            <th>Empresa y oficio</th>
                             <th>Respuesta</th>
                             <th class="text-end">Registro</th>
                         </tr>
@@ -148,14 +147,9 @@
                                 </td>
                                 <td>
                                     <div class="text-gray-900 fw-bold">{{ $c->nombre_completo }}</div>
-                                    @if ($c->tipo !== $config['publico'])<span class="badge badge-light-info fs-8">{{ $c->tipo === 'padre' ? 'Padre de familia' : 'Catedrático' }}</span>@endif
-                                </td>
+                                                                    </td>
                                 <td>
-                                    @if ($c->tipo === 'padre')
-                                        {{ $c->estudiante ?: '—' }}@if ($c->grado_seccion)<span class="d-block fs-7 text-muted">{{ $c->grado_seccion }}</span>@endif
-                                    @else
-                                        {{ $c->area ?: '—' }}
-                                    @endif
+                                    {{ $c->empresa ?: '—' }}@if ($c->oficio)<span class="d-block fs-7 text-muted">{{ $c->oficio }}</span>@endif
                                 </td>
                                 <td>
                                     @if ($inv?->respuesta === 'confirmada')

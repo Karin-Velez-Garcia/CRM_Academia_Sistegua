@@ -9,13 +9,13 @@
                 <i class="ki-outline ki-check-circle fs-5x text-success mb-5"></i>
                 <h1 class="fs-3 fw-bold text-gray-900 mb-3">Listo, ya no recibirá más correos</h1>
                 <div class="text-gray-600">
-                    Si cambia de opinión, comuníquese con la secretaría del colegio para volver a recibir las invitaciones.
+                    Si cambia de opinión, comuníquese con la secretaría de la academia para volver a recibir las invitaciones.
                 </div>
             @else
                 <i class="ki-outline ki-sms fs-5x text-gray-400 mb-5"></i>
                 <h1 class="fs-3 fw-bold text-gray-900 mb-3">¿Dejar de recibir correos?</h1>
                 <div class="text-gray-600 mb-8">
-                    {{ $contacto->nombre_completo }}, si continúa, el colegio ya no le enviará invitaciones a reuniones ni avisos por correo a
+                    {{ $contacto->nombre_completo }}, si continúa, la academia ya no le enviará invitaciones a reuniones ni avisos por correo a
                     <strong>{{ $contacto->correo }}</strong>.
                 </div>
                 <form method="POST" action="{{ route('invitacion.baja.store', $invitacion->token) }}" class="d-grid d-sm-flex justify-content-center gap-3">

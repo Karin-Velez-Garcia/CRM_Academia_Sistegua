@@ -171,7 +171,7 @@ class Fase1Test extends TestCase
 
         $this->assertSame(22, Departamento::count());
         $this->actingAs($u)->get(route('geografia.index', ['buscar' => 'Sanarate']))
-            ->assertOk()->assertSee('El Progreso')->assertDontSee('Quetzaltenango');
+            ->assertOk()->assertSee('El Progreso')->assertDontSee('Sololá');
         $this->actingAs($u)->get(route('geografia.show', $elProgreso))->assertOk()->assertSee('Guastatoya')->assertSee('Sanarate');
         $this->actingAs($u)->getJson(route('api.municipios', $elProgreso))
             ->assertOk()->assertJsonCount(8)->assertJsonFragment(['codigo' => '0207', 'nombre' => 'Sanarate']);

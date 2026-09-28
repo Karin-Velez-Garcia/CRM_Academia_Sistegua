@@ -11,20 +11,20 @@ class PlantillasSeeder extends Seeder
     public function run(): void
     {
         Plantilla::firstOrCreate(
-            ['nombre' => 'Invitación a reunión de padres', 'tipo_evento' => Evento::REUNION],
+            ['nombre' => 'Invitación a capacitación', 'tipo_evento' => Evento::CAPACITACION],
             [
-                'asunto' => 'Invitación: {titulo} — {fecha}',
-                'mensaje' => "Estimado(a) {nombre}:\n\nReciba un cordial saludo del {colegio}. Le invitamos a la reunión \"{titulo}\", que se realizará el {fecha}, de {hora}, en {lugar}.\n\nSu participación es muy importante para acompañar el proceso educativo de {estudiante}.\n\nLe agradecemos confirmar su asistencia con los botones de este correo.",
+                'asunto' => 'Capacitación: {titulo} — {fecha}',
+                'mensaje' => "Estimado(a) {nombre}:\n\nReciba un cordial saludo de {academia}. Le invitamos a la capacitación \"{titulo}\", que se realizará el {fecha}, de {hora}, en {lugar}.\n\nAl finalizar se entrega constancia de participación.\n\nLe agradecemos confirmar su asistencia con los botones de este correo.",
                 'predeterminada' => true,
             ]
         );
 
         Plantilla::firstOrCreate(
-            ['nombre' => 'Convocatoria a capacitación docente', 'tipo_evento' => Evento::CAPACITACION],
+            ['nombre' => 'Invitación a taller práctico', 'tipo_evento' => Evento::CAPACITACION],
             [
-                'asunto' => 'Capacitación: {titulo} — {fecha}',
-                'mensaje' => "Estimado(a) {nombre}:\n\nLa dirección del {colegio}, sede {sede}, le convoca a la capacitación \"{titulo}\", el {fecha}, de {hora}, en {lugar}.\n\nPor favor confirme su participación con los botones de este correo.",
-                'predeterminada' => true,
+                'asunto' => 'Taller práctico: {titulo} — {fecha}',
+                'mensaje' => "Estimado(a) {nombre}:\n\n{academia}, sede {sede}, le invita al taller práctico \"{titulo}\", el {fecha}, de {hora}, en {lugar}.\n\nEl taller incluye demostración en sitio con producto. Se recomienda asistir con equipo de protección personal.\n\nPor favor confirme su participación con los botones de este correo.",
+                'predeterminada' => false,
             ]
         );
     }

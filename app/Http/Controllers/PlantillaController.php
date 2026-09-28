@@ -31,7 +31,7 @@ class PlantillaController extends Controller implements HasMiddleware
 
     public function create(Request $request): View
     {
-        return view('plantillas.create', ['plantilla' => new Plantilla(['tipo_evento' => $request->input('tipo', Evento::REUNION)])]);
+        return view('plantillas.create', ['plantilla' => new Plantilla(['tipo_evento' => $request->input('tipo', Evento::CAPACITACION)])]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -69,7 +69,7 @@ class PlantillaController extends Controller implements HasMiddleware
     {
         $datos = $request->validate([
             'nombre' => ['required', 'string', 'max:100'],
-            'tipo_evento' => ['required', Rule::in([Evento::REUNION, Evento::CAPACITACION])],
+            'tipo_evento' => ['required', Rule::in([Evento::CAPACITACION])],
             'asunto' => ['required', 'string', 'max:200'],
             'mensaje' => ['required', 'string', 'max:5000'],
             'predeterminada' => ['boolean'],

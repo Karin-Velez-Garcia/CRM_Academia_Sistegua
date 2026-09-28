@@ -16,7 +16,7 @@
         <div class="col-xl-7">
             <div class="card h-100" id="cartel-qr">
                 <div class="card-body d-flex flex-column align-items-center text-center p-10">
-                    <img src="{{ asset('assets/media/logos/esteca-logo.png') }}" alt="" class="h-70px mb-5">
+                    <img src="{{ asset('assets/media/logos/academia-logo.png') }}" alt="" class="h-70px mb-5">
                     <div class="text-muted fw-semibold fs-6 text-uppercase mb-1">Registro de asistencia</div>
                     <h2 class="fs-1 fw-bold text-gray-900 mb-2">{{ $evento->titulo }}</h2>
                     <div class="text-gray-600 fs-6 mb-6">{{ $evento->horario }} · Sede {{ $evento->sede->nombre }}</div>
@@ -32,7 +32,7 @@
                 <div class="card-body pt-2 text-gray-700 fs-6">
                     <ol class="ps-5 mb-0">
                         <li class="mb-3"><strong>Proyecte</strong> esta pantalla en el salón o <strong>imprima</strong> el cartel y colóquelo en la entrada.</li>
-                        <li class="mb-3">Cada padre o catedrático escanea el código y escribe su <strong>correo o DPI</strong>; su asistencia queda registrada al instante.</li>
+                        <li class="mb-3">Cada cliente escanea el código y escribe su <strong>correo o DPI</strong>; su asistencia queda registrada al instante.</li>
                         <li class="mb-3">Quien no tenga celular o no esté registrado puede anotarse en la <a href="{{ route('asistencia.show', [$segmento, $evento]) }}">lista de asistencia</a>.</li>
                         <li>El registro funciona desde {{ \App\Models\Evento::REGISTRO_ANTES }} minutos antes del inicio hasta {{ \App\Models\Evento::REGISTRO_DESPUES }} minutos después del final.</li>
                     </ol>

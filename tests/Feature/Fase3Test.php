@@ -17,17 +17,17 @@ class Fase3Test extends TestCase
 {
     use RefreshDatabase;
 
-    private Sede $sanarate;
-    private Sede $coban;
+    private Sede $guatemala;
+    private Sede $escuintla;
     private User $admin;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed([GeografiaSeeder::class, SedesSeeder::class, RolesPermisosSeeder::class]);
-        $this->sanarate = Sede::where('nombre', 'Sanarate')->firstOrFail();
-        $this->sanarate->update(['direccion' => '3a. Calle 2-45, Zona 1, Sanarate']);
-        $this->coban = Sede::where('nombre', 'Cobán')->firstOrFail();
+        $this->guatemala = Sede::where('nombre', 'Ciudad de Guatemala')->firstOrFail();
+        $this->guatemala->update(['direccion' => '3a. Calle 2-45, Zona 1, Ciudad de Guatemala']);
+        $this->escuintla = Sede::where('nombre', 'Escuintla')->firstOrFail();
         $this->admin = User::factory()->create();
         $this->admin->assignRole(User::ROL_ADMINISTRADOR);
     }
@@ -40,10 +40,10 @@ class Fase3Test extends TestCase
         ]);
     }
 
-    private function datosReunion(array $cambios = []): array
+    private function datosCapacitacion(array $cambios = []): array
     {
         return $cambios + [
-            'titulo' => 'Entrega de notas', 'descripcion' => 'Primer bimestre', 'sede_id' => $this->sanarate->id,
+            'titulo' => 'Instalación de tabla yeso', 'descripcion' => 'Módulo básico', 'sede_id' => $this->guatemala->id,
             'modalidad' => 'presencial', 'fecha' => now()->addWeek()->format('Y-m-d'),
             'hora_inicio' => '15:00', 'hora_fin' => '17:00', 'lugar' => 'Salón principal', 'para_todos' => '1',
         ];
@@ -51,45 +51,44 @@ class Fase3Test extends TestCase
 
     public function test_formulario_propone_la_direccion_de_la_sede(): void
     {
-        $directora = User::factory()->create(['sede_id' => $this->sanarate->id]);
+        $directora = User::factory()->create(['sede_id' => $this->guatemala->id]);
         $directora->assignRole('Director de sede');
 
-        $this->actingAs($directora)->get(route('eventos.create', 'reuniones'))
-            ->assertOk()->assertSee('3a. Calle 2-45, Zona 1, Sanarate');
+        $this->actingAs($directora)->get(route('eventos.create', 'capacitaciones'))
+            ->assertOk()->assertSee('3a. Calle 2-45, Zona 1, Ciudad de Guatemala');
     }
 
-    public function test_programar_reunion_presencial_para_todos_los_padres(): void
+    public function test_programar_capacitacion_presencial_para_todos_los_clientes(): void
     {
-        $this->contacto(Contacto::PADRE, $this->sanarate);
-        $this->contacto(Contacto::PADRE, $this->sanarate, ['correo' => null]);
-        $this->contacto(Contacto::PADRE, $this->coban);                // otra sede
-        $this->contacto(Contacto::CATEDRATICO, $this->sanarate);       // otro tipo
+        $this->contacto(Contacto::CLIENTE, $this->guatemala);
+        $this->contacto(Contacto::CLIENTE, $this->guatemala, ['correo' => null]);
+        $this->contacto(Contacto::CLIENTE, $this->escuintla);                // otra sede
 
-        $this->actingAs($this->admin)->post(route('eventos.store', 'reuniones'), $this->datosReunion())
+        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion())
             ->assertRedirect();
 
         $evento = Evento::firstOrFail();
-        $this->assertSame(Evento::REUNION, $evento->tipo);
+        $this->assertSame(Evento::CAPACITACION, $evento->tipo);
         $this->assertSame('15:00', $evento->inicio->format('H:i'));
         $this->assertSame(2.0, $evento->duracion_horas);
         $this->assertSame($this->admin->id, $evento->creado_por);
         $this->assertSame(2, $evento->destinatarios()->count());
         $this->assertSame(1, $evento->destinatariosConCorreo()->count());
 
-        $this->actingAs($this->admin)->get(route('eventos.show', ['reuniones', $evento]))
-            ->assertOk()->assertSee('Salón principal')->assertSee('Todos los padres de familia');
-        $this->actingAs($this->admin)->get(route('eventos.index', 'reuniones'))->assertOk()->assertSee('Entrega de notas');
+        $this->actingAs($this->admin)->get(route('eventos.show', ['capacitaciones', $evento]))
+            ->assertOk()->assertSee('Salón principal')->assertSee('Todos los clientes');
+        $this->actingAs($this->admin)->get(route('eventos.index', 'capacitaciones'))->assertOk()->assertSee('Instalación de tabla yeso');
     }
 
     public function test_capacitacion_virtual_para_un_grupo(): void
     {
-        $grupo = Grupo::create(['nombre' => 'Claustro básico', 'tipo' => Contacto::CATEDRATICO, 'sede_id' => null]);
-        $enSede = $this->contacto(Contacto::CATEDRATICO, $this->coban);
-        $otraSede = $this->contacto(Contacto::CATEDRATICO, $this->sanarate);
+        $grupo = Grupo::create(['nombre' => 'Claustro básico', 'tipo' => Contacto::CLIENTE, 'sede_id' => null]);
+        $enSede = $this->contacto(Contacto::CLIENTE, $this->escuintla);
+        $otraSede = $this->contacto(Contacto::CLIENTE, $this->guatemala);
         $grupo->contactos()->attach([$enSede->id, $otraSede->id]);
 
         $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), [
-            'titulo' => 'Evaluación por competencias', 'sede_id' => $this->coban->id, 'modalidad' => 'virtual',
+            'titulo' => 'Evaluación por competencias', 'sede_id' => $this->escuintla->id, 'modalidad' => 'virtual',
             'fecha' => now()->addDays(3)->format('Y-m-d'), 'hora_inicio' => '08:00', 'hora_fin' => '12:30',
             'enlace' => 'https://meet.google.com/abc-defg-hij', 'facilitador' => 'Lic. Ana Pérez', 'cupo' => '30',
             'grupos' => [$grupo->id], 'lugar' => 'se ignora',
@@ -107,64 +106,57 @@ class Fase3Test extends TestCase
 
     public function test_validaciones_del_evento(): void
     {
-        $this->actingAs($this->admin)->post(route('eventos.store', 'reuniones'), [
-            'titulo' => '', 'sede_id' => $this->sanarate->id, 'modalidad' => 'virtual',
+        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), [
+            'titulo' => '', 'sede_id' => $this->guatemala->id, 'modalidad' => 'virtual',
             'fecha' => 'mañana', 'hora_inicio' => '17:00', 'hora_fin' => '15:00', 'enlace' => 'no-es-enlace',
         ])->assertSessionHasErrors(['titulo', 'fecha', 'hora_fin', 'enlace']);
 
         // Presencial sin lugar
-        $this->actingAs($this->admin)->post(route('eventos.store', 'reuniones'), $this->datosReunion(['lugar' => '']))
+        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion(['lugar' => '']))
             ->assertSessionHasErrors('lugar');
 
         // Sin destinatarios
-        $this->actingAs($this->admin)->post(route('eventos.store', 'reuniones'), $this->datosReunion(['para_todos' => '0']))
+        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion(['para_todos' => '0']))
             ->assertSessionHasErrors('grupos');
-
-        // Una reunión no acepta datos de capacitación
-        $this->actingAs($this->admin)->post(route('eventos.store', 'reuniones'), $this->datosReunion(['cupo' => '20']))
-            ->assertSessionHasErrors('cupo');
 
         $this->assertSame(0, Evento::count());
     }
 
     public function test_editar_cancelar_reactivar_duplicar_y_eliminar(): void
     {
-        $this->actingAs($this->admin)->post(route('eventos.store', 'reuniones'), $this->datosReunion());
+        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion());
         $evento = Evento::firstOrFail();
 
-        $this->actingAs($this->admin)->put(route('eventos.update', ['reuniones', $evento]),
-            $this->datosReunion(['titulo' => 'Entrega de notas (cambio de hora)', 'hora_inicio' => '16:00', 'hora_fin' => '18:00']))
-            ->assertRedirect(route('eventos.show', ['reuniones', $evento]));
+        $this->actingAs($this->admin)->put(route('eventos.update', ['capacitaciones', $evento]),
+            $this->datosCapacitacion(['titulo' => 'Instalación de tabla yeso (cambio de hora)', 'hora_inicio' => '16:00', 'hora_fin' => '18:00']))
+            ->assertRedirect(route('eventos.show', ['capacitaciones', $evento]));
         $this->assertSame('16:00', $evento->fresh()->inicio->format('H:i'));
 
-        $this->actingAs($this->admin)->patch(route('eventos.cancelar', ['reuniones', $evento]), ['motivo' => 'Lluvia'])->assertSessionHas('success');
+        $this->actingAs($this->admin)->patch(route('eventos.cancelar', ['capacitaciones', $evento]), ['motivo' => 'Lluvia'])->assertSessionHas('success');
         $this->assertSame('cancelado', $evento->fresh()->estado);
-        $this->actingAs($this->admin)->get(route('eventos.index', ['reuniones', 'estado' => 'cancelados']))->assertSee('cambio de hora');
-        $this->actingAs($this->admin)->get(route('eventos.index', 'reuniones'))->assertDontSee('cambio de hora');
+        $this->actingAs($this->admin)->get(route('eventos.index', ['capacitaciones', 'estado' => 'cancelados']))->assertSee('cambio de hora');
+        $this->actingAs($this->admin)->get(route('eventos.index', 'capacitaciones'))->assertDontSee('cambio de hora');
 
-        $this->actingAs($this->admin)->patch(route('eventos.reactivar', ['reuniones', $evento]));
+        $this->actingAs($this->admin)->patch(route('eventos.reactivar', ['capacitaciones', $evento]));
         $this->assertSame('programado', $evento->fresh()->estado);
 
-        $this->actingAs($this->admin)->get(route('eventos.duplicar', ['reuniones', $evento]))
+        $this->actingAs($this->admin)->get(route('eventos.duplicar', ['capacitaciones', $evento]))
             ->assertOk()->assertSee('Copia de')->assertSee('Salón principal');
 
-        // Una reunión no se abre desde la ruta de capacitaciones
-        $this->actingAs($this->admin)->get(route('eventos.show', ['capacitaciones', $evento]))->assertNotFound();
-
-        $this->actingAs($this->admin)->delete(route('eventos.destroy', ['reuniones', $evento]))->assertRedirect(route('eventos.index', 'reuniones'));
+        $this->actingAs($this->admin)->delete(route('eventos.destroy', ['capacitaciones', $evento]))->assertRedirect(route('eventos.index', 'capacitaciones'));
         $this->assertModelMissing($evento);
     }
 
     public function test_archivo_de_calendario(): void
     {
-        $this->actingAs($this->admin)->post(route('eventos.store', 'reuniones'), $this->datosReunion(['titulo' => 'Reunión, general; padres']));
+        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion(['titulo' => 'Capacitación, general; clientes']));
         $evento = Evento::firstOrFail();
 
-        $resp = $this->actingAs($this->admin)->get(route('eventos.calendario', ['reuniones', $evento]));
+        $resp = $this->actingAs($this->admin)->get(route('eventos.calendario', ['capacitaciones', $evento]));
         $resp->assertOk()->assertHeader('Content-Type', 'text/calendar; charset=utf-8');
         $ics = $resp->getContent();
         $this->assertStringContainsString('BEGIN:VEVENT', $ics);
-        $this->assertStringContainsString('SUMMARY:Reunión\, general\; padres', $ics);
+        $this->assertStringContainsString('SUMMARY:Capacitación\, general\; clientes', $ics);
         // 15:00 en Guatemala (UTC-6) = 21:00 UTC
         $this->assertStringContainsString('DTSTART:'.$evento->inicio->format('Ymd').'T210000Z', $ics);
         $this->assertStringContainsString('LOCATION:Salón principal', $ics);
@@ -172,25 +164,25 @@ class Fase3Test extends TestCase
 
     public function test_usuario_de_sede_solo_ve_sus_eventos_y_secretaria_no_crea(): void
     {
-        $this->actingAs($this->admin)->post(route('eventos.store', 'reuniones'), $this->datosReunion(['titulo' => 'De Sanarate']));
-        $this->actingAs($this->admin)->post(route('eventos.store', 'reuniones'), $this->datosReunion(['titulo' => 'De Cobán', 'sede_id' => $this->coban->id]));
-        $deSanarate = Evento::where('titulo', 'De Sanarate')->firstOrFail();
+        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion(['titulo' => 'De Sanarate']));
+        $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), $this->datosCapacitacion(['titulo' => 'De Cobán', 'sede_id' => $this->escuintla->id]));
+        $deGuatemala = Evento::where('titulo', 'De Sanarate')->firstOrFail();
 
-        $director = User::factory()->create(['sede_id' => $this->coban->id]);
+        $director = User::factory()->create(['sede_id' => $this->escuintla->id]);
         $director->assignRole('Director de sede');
-        $this->actingAs($director)->get(route('eventos.index', 'reuniones'))->assertSee('De Cobán')->assertDontSee('De Sanarate');
-        $this->actingAs($director)->get(route('eventos.show', ['reuniones', $deSanarate]))->assertForbidden();
+        $this->actingAs($director)->get(route('eventos.index', 'capacitaciones'))->assertSee('De Cobán')->assertDontSee('De Sanarate');
+        $this->actingAs($director)->get(route('eventos.show', ['capacitaciones', $deGuatemala]))->assertForbidden();
 
         $secretaria = User::factory()->create();
         $secretaria->assignRole('Secretaría');
-        $this->actingAs($secretaria)->get(route('eventos.show', ['reuniones', $deSanarate]))->assertOk();
-        $this->actingAs($secretaria)->get(route('eventos.create', 'reuniones'))->assertForbidden();
+        $this->actingAs($secretaria)->get(route('eventos.show', ['capacitaciones', $deGuatemala]))->assertOk();
+        $this->actingAs($secretaria)->get(route('eventos.create', 'capacitaciones'))->assertForbidden();
     }
 
     public function test_panel_muestra_proximos_eventos(): void
     {
         $this->actingAs($this->admin)->post(route('eventos.store', 'capacitaciones'), [
-            'titulo' => 'Uso de plataformas', 'sede_id' => $this->sanarate->id, 'modalidad' => 'presencial', 'lugar' => 'Laboratorio',
+            'titulo' => 'Uso de plataformas', 'sede_id' => $this->guatemala->id, 'modalidad' => 'presencial', 'lugar' => 'Laboratorio',
             'fecha' => now()->addDay()->format('Y-m-d'), 'hora_inicio' => '09:00', 'hora_fin' => '11:00', 'para_todos' => '1',
         ]);
 

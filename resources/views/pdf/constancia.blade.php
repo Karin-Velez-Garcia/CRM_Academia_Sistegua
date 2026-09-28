@@ -14,7 +14,7 @@
         .franja-roja { position: absolute; top: 46px; left: 36px; right: 36px; height: 4px; background: #e4252f; }
         .contenido { position: absolute; top: 80px; left: 90px; right: 90px; text-align: center; }
         .logo { height: 110px; }
-        .colegio { font-size: 15px; letter-spacing: 3px; text-transform: uppercase; color: #78829d; margin-top: 8px; }
+        .academia { font-size: 15px; letter-spacing: 3px; text-transform: uppercase; color: #78829d; margin-top: 8px; }
         h1 { font-size: 38px; margin: 18px 0 4px; color: #071437; letter-spacing: 1px; }
         .otorga { font-size: 15px; color: #78829d; margin-top: 14px; }
         .nombre { font-size: 32px; font-weight: bold; color: #1b84ff; margin: 10px 0 6px; padding-bottom: 8px; border-bottom: 1px solid #dbdfe9; display: inline-block; min-width: 60%; }
@@ -34,8 +34,8 @@
         <div class="franja-roja"></div>
 
         <div class="contenido">
-            <img class="logo" src="{{ public_path('assets/media/logos/esteca-logo.png') }}" alt="">
-            <div class="colegio">{{ config('colegio.nombre') }} · Sede {{ $evento->sede->nombre }}</div>
+            <img class="logo" src="{{ public_path('assets/media/logos/academia-logo.png') }}" alt="">
+            <div class="colegio">{{ config('academia.nombre') }} · Sede {{ $evento->sede->nombre }}</div>
             <h1>CONSTANCIA DE PARTICIPACIÓN</h1>
             <div class="otorga">Se otorga la presente a</div>
             <div class="nombre">{{ $inv->contacto->nombre_completo }}</div>
@@ -51,7 +51,7 @@
             <tr>
                 <td class="firma">{{ $evento->facilitador ?: 'Facilitador(a)' }}<br><span style="color:#99a1b7">Facilitador(a)</span></td>
                 <td style="width:96px"></td>
-                <td class="firma">Dirección<br><span style="color:#99a1b7">{{ config('colegio.nombre') }}, sede {{ $evento->sede->nombre }}</span></td>
+                <td class="firma">Dirección<br><span style="color:#99a1b7">{{ config('academia.nombre') }}, sede {{ $evento->sede->nombre }}</span></td>
             </tr>
         </table>
 

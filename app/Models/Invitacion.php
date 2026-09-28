@@ -28,7 +28,7 @@ class Invitacion extends Model
 
     /** Cómo se registró la asistencia. */
     public const METODOS = [
-        'manual' => 'Lista del colegio',
+        'manual' => 'Lista de la academia',
         'qr_evento' => 'QR del evento',
         'qr_personal' => 'QR personal',
     ];
@@ -51,7 +51,7 @@ class Invitacion extends Model
         return $inv;
     }
 
-    /** Contenido del QR personal: el personal del colegio lo escanea en la entrada. */
+    /** Contenido del QR personal: el personal de la academia lo escanea en la entrada. */
     public function urlEscaneo(): string
     {
         return route('escaneo.show', $this->token);

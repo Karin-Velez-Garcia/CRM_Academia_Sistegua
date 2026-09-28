@@ -75,7 +75,7 @@
 /* Pantalla de acceso */
 .auth-aside { background-size: cover; background-position: center; }
 
-/* Logo del colegio */
+/* Logo de la academia */
 .logo-login { height: 150px; width: auto; display: block; }
 @media (max-width: 991.98px) { .logo-login { height: 100px; } }
 

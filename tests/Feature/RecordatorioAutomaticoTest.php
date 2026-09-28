@@ -32,14 +32,14 @@ class RecordatorioAutomaticoTest extends TestCase
         $this->seed([GeografiaSeeder::class, SedesSeeder::class, RolesPermisosSeeder::class, PlantillasSeeder::class]);
         Mail::fake();
         // Estas pruebas cubren el envío automático (opcional, para un servidor con tarea programada)
-        config(['colegio.recordatorio' => ['automatico' => true, 'dias_antes' => 1, 'hora' => '07:00']]);
+        config(['academia.recordatorio' => ['automatico' => true, 'dias_antes' => 1, 'hora' => '07:00']]);
 
         // Hoy es lunes 10:00; el evento es el jueves a las 15:00
         $this->travelTo(Carbon::parse('2026-10-05 10:00'));
         $this->inicio = Carbon::parse('2026-10-08 15:00');
-        $this->sede = Sede::where('nombre', 'Sanarate')->firstOrFail();
+        $this->sede = Sede::where('nombre', 'Ciudad de Guatemala')->firstOrFail();
         $this->evento = Evento::create([
-            'tipo' => Evento::REUNION, 'titulo' => 'Entrega de notas', 'sede_id' => $this->sede->id,
+            'tipo' => Evento::CAPACITACION, 'titulo' => 'Instalación de tabla yeso', 'sede_id' => $this->sede->id,
             'modalidad' => Evento::PRESENCIAL, 'lugar' => 'Salón', 'para_todos' => true,
             'inicio' => $this->inicio, 'fin' => $this->inicio->copy()->addHours(2),
         ]);
@@ -48,7 +48,7 @@ class RecordatorioAutomaticoTest extends TestCase
     private function invitado(?string $respuesta = null, array $datos = []): Invitacion
     {
         $c = Contacto::create(($datos['contacto'] ?? []) + [
-            'tipo' => Contacto::PADRE, 'sede_id' => $this->sede->id, 'nombres' => 'N'.uniqid(), 'apellidos' => 'A', 'correo' => uniqid().'@correo.com',
+            'tipo' => Contacto::CLIENTE, 'sede_id' => $this->sede->id, 'nombres' => 'N'.uniqid(), 'apellidos' => 'A', 'correo' => uniqid().'@correo.com',
         ]);
 
         return Invitacion::create([
@@ -96,7 +96,7 @@ class RecordatorioAutomaticoTest extends TestCase
 
         // Otro evento que ya empezó: no se recuerda
         $pasado = Evento::create([
-            'tipo' => Evento::REUNION, 'titulo' => 'Ya empezó', 'sede_id' => $this->sede->id, 'modalidad' => Evento::PRESENCIAL,
+            'tipo' => Evento::CAPACITACION, 'titulo' => 'Ya empezó', 'sede_id' => $this->sede->id, 'modalidad' => Evento::PRESENCIAL,
             'lugar' => 'Salón', 'para_todos' => true, 'inicio' => now()->subHour(), 'fin' => now()->addHour(),
         ]);
         $this->assertFalse(Evento::conRecordatorioPendiente()->contains($pasado));
@@ -139,8 +139,8 @@ class RecordatorioAutomaticoTest extends TestCase
         // Se pospone una semana desde la aplicación
         $admin = User::factory()->create();
         $admin->assignRole(User::ROL_ADMINISTRADOR);
-        $this->actingAs($admin)->put(route('eventos.update', ['reuniones', $this->evento]), [
-            'titulo' => 'Entrega de notas', 'sede_id' => $this->sede->id, 'modalidad' => 'presencial', 'lugar' => 'Salón',
+        $this->actingAs($admin)->put(route('eventos.update', ['capacitaciones', $this->evento]), [
+            'titulo' => 'Instalación de tabla yeso', 'sede_id' => $this->sede->id, 'modalidad' => 'presencial', 'lugar' => 'Salón',
             'fecha' => '2026-10-15', 'hora_inicio' => '15:00', 'hora_fin' => '17:00', 'para_todos' => '1',
             'recordatorio_automatico' => '1', 'avisar_cambio' => '0',
         ])->assertRedirect();
@@ -158,7 +158,7 @@ class RecordatorioAutomaticoTest extends TestCase
         $admin->assignRole(User::ROL_ADMINISTRADOR);
 
         $this->assertStringContainsString('miércoles 7 de octubre a las 07:00', $this->evento->estado_recordatorio);
-        $this->actingAs($admin)->get(route('eventos.show', ['reuniones', $this->evento]))
+        $this->actingAs($admin)->get(route('eventos.show', ['capacitaciones', $this->evento]))
             ->assertOk()->assertSee('Recordatorio:')->assertSee('Se enviará automáticamente el miércoles 7 de octubre');
 
         $this->artisan('recordatorios:enviar', ['--simular' => true])->expectsOutput('No hay recordatorios pendientes.');

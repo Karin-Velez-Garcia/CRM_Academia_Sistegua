@@ -12,52 +12,40 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Eventos de demostración (reuniones y capacitaciones) de los últimos 11 meses y
- * algunas próximas, con invitaciones y asistencia simuladas de forma realista:
- * quien tiene correo recibe invitación; la asistencia se toma la mayoría de las
- * veces pero no siempre se completa toda la lista, igual que en el uso real.
+ * Capacitaciones de demostración de los últimos 11 meses y algunas próximas, con
+ * invitaciones y asistencia simuladas de forma realista: quien tiene correo recibe
+ * invitación; la asistencia se toma la mayoría de las veces pero no siempre se
+ * completa toda la lista, igual que en el uso real.
  */
 class EventosDemoSeeder extends Seeder
 {
-    private array $tituloReuniones = [
-        'Reunión general de padres de familia',
-        'Entrega de notas - Primer bimestre',
-        'Entrega de notas - Segundo bimestre',
-        'Entrega de notas - Tercer bimestre',
-        'Entrega de notas - Cuarto bimestre',
-        'Reunión de padres de Preprimaria',
-        'Reunión de padres de Primaria',
-        'Reunión de padres de Básico',
-        'Jornada de puertas abiertas',
-        'Reunión informativa: inicio de ciclo escolar',
-        'Asamblea de padres de familia',
-        'Reunión de seguimiento académico',
-        'Reunión de padres: actividades de fin de año',
-    ];
-
-    private array $tituloCapacitaciones = [
-        'Capacitación: Manejo positivo del aula',
-        'Capacitación en primeros auxilios',
-        'Taller de planificación didáctica',
-        'Capacitación en evaluación por competencias',
-        'Taller de convivencia y disciplina escolar',
-        'Capacitación en herramientas digitales para el aula',
-        'Taller de atención a la diversidad',
-        'Capacitación en prevención de violencia escolar',
-        'Jornada de actualización docente',
-        'Taller de trabajo colaborativo entre catedráticos',
+    private array $titulos = [
+        'Instalación de tabla yeso: fundamentos',
+        'Cielo falso suspendido paso a paso',
+        'Muros divisorios en steel framing',
+        'Acabados y masillado nivel 5',
+        'Aislamiento acústico en construcción liviana',
+        'Sistemas de fachada liviana',
+        'Instalación de cielo falso mineral',
+        'Cálculo y cuantificación de materiales',
+        'Tabla cemento en áreas húmedas',
+        'Resistencia al fuego en sistemas livianos',
+        'Herramienta y equipo para el instalador',
+        'Certificación de instalador: módulo práctico',
+        'Novedades de producto y garantías',
+        'Buenas prácticas en obra y seguridad',
     ];
 
     private array $lugares = [
-        'Salón de Usos Múltiples',
-        'Auditorio del colegio',
-        'Salón de proyecciones',
+        'Centro de capacitación',
+        'Sala de demostración',
+        'Taller práctico',
     ];
 
     private array $enlaces = [
-        'https://meet.google.com/demo-esteca-reunion',
+        'https://meet.google.com/demo-sistegua-capacitacion',
         'https://zoom.us/j/00000000000',
-        'https://teams.microsoft.com/l/meetup-join/demo-esteca',
+        'https://teams.microsoft.com/l/meetup-join/demo-sistegua',
     ];
 
     private array $comentariosRechazo = [
@@ -73,34 +61,30 @@ class EventosDemoSeeder extends Seeder
         $admin = User::query()->orderBy('id')->first();
         $sedes = Sede::all();
 
-        $tipos = array_merge(array_fill(0, 15, Evento::REUNION), array_fill(0, 10, Evento::CAPACITACION));
-        shuffle($tipos);
-
+        $total = 25;
         $inicioRango = now()->copy()->subMonths(11)->startOfMonth();
         $finRango = now()->copy()->addWeeks(3);
         $totalDias = $inicioRango->diffInDays($finRango);
 
-        foreach ($tipos as $indice => $tipo) {
+        $facilitadores = ['Ing. Mario Cabrera', 'Arq. Silvia Monterroso', 'Téc. Byron Tzoc', 'Ing. Elena Girón', 'Téc. Wilmer Pérez'];
+
+        for ($indice = 0; $indice < $total; $indice++) {
             $sede = $sedes[$indice % $sedes->count()];
-            $dia = $inicioRango->copy()->addDays((int) round($indice * $totalDias / (count($tipos) - 1)) + random_int(-3, 3));
+            $dia = $inicioRango->copy()->addDays((int) round($indice * $totalDias / ($total - 1)) + random_int(-3, 3));
 
             $esVirtual = random_int(1, 100) <= 20;
-            $horaInicio = $tipo === Evento::REUNION
-                ? ['17:00', '17:30', '18:00'][array_rand(['17:00', '17:30', '18:00'])]
-                : ['08:00', '09:00', '14:00'][array_rand(['08:00', '09:00', '14:00'])];
-            [$h, $m] = explode(':', $horaInicio);
+            $horas = ['08:00', '09:00', '14:00'];
+            [$h, $m] = explode(':', $horas[array_rand($horas)]);
             $inicio = $dia->copy()->setTime((int) $h, (int) $m);
-            $duracionHoras = $tipo === Evento::REUNION ? [1.5, 2][array_rand([1.5, 2])] : [2, 3, 4][array_rand([2, 3, 4])];
-            $fin = $inicio->copy()->addMinutes((int) ($duracionHoras * 60));
+            $duraciones = [2, 3, 4];
+            $fin = $inicio->copy()->addHours($duraciones[array_rand($duraciones)]);
 
-            $paraTodos = random_int(1, 100) <= 55;
-            $publico = $tipo === Evento::REUNION ? Contacto::PADRE : Contacto::CATEDRATICO;
-
-            $titulos = $tipo === Evento::REUNION ? $this->tituloReuniones : $this->tituloCapacitaciones;
+            $paraTodos = random_int(1, 100) <= 45;
+            $cupos = [20, 25, 30, 40];
 
             $evento = Evento::create([
-                'tipo' => $tipo,
-                'titulo' => $titulos[$indice % count($titulos)],
+                'tipo' => Evento::CAPACITACION,
+                'titulo' => $this->titulos[$indice % count($this->titulos)],
                 'descripcion' => null,
                 'sede_id' => $sede->id,
                 'modalidad' => $esVirtual ? Evento::VIRTUAL : Evento::PRESENCIAL,
@@ -108,16 +92,14 @@ class EventosDemoSeeder extends Seeder
                 'fin' => $fin,
                 'lugar' => $esVirtual ? null : $this->lugares[array_rand($this->lugares)].' - Sede '.$sede->nombre,
                 'enlace' => $esVirtual ? $this->enlaces[array_rand($this->enlaces)] : null,
-                'facilitador' => $tipo === Evento::CAPACITACION
-                    ? optional(Contacto::tipo(Contacto::CATEDRATICO)->where('sede_id', $sede->id)->inRandomOrder()->first())->nombre_completo
-                    : null,
-                'cupo' => $tipo === Evento::CAPACITACION && random_int(1, 100) <= 60 ? [25, 30, 40, 50][array_rand([25, 30, 40, 50])] : null,
+                'facilitador' => $facilitadores[array_rand($facilitadores)],
+                'cupo' => random_int(1, 100) <= 70 ? $cupos[array_rand($cupos)] : null,
                 'para_todos' => $paraTodos,
                 'creado_por' => $admin?->id,
             ]);
 
             if (! $paraTodos) {
-                $grupos = Grupo::compatibles($publico, $sede->id)->inRandomOrder()->limit(random_int(1, 2))->pluck('id');
+                $grupos = Grupo::compatibles(Contacto::CLIENTE, $sede->id)->inRandomOrder()->limit(random_int(1, 2))->pluck('id');
                 if ($grupos->isNotEmpty()) {
                     $evento->grupos()->sync($grupos);
                 } else {

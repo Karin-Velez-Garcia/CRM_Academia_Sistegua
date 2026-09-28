@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Evento extends Model
 {
-    public const REUNION = 'reunion';
     public const CAPACITACION = 'capacitacion';
 
     public const PRESENCIAL = 'presencial';
@@ -20,23 +19,14 @@ class Evento extends Model
      * Configuración de cada tipo: segmento de la URL, textos y a quién se dirige.
      */
     public const TIPOS = [
-        'reuniones' => [
-            'tipo' => self::REUNION,
-            'plural' => 'Reuniones',
-            'singular' => 'reunión',
-            'nuevo' => 'Nueva reunión',
-            'icono' => 'ki-calendar',
-            'publico' => Contacto::PADRE,
-            'publico_texto' => 'padres de familia',
-        ],
         'capacitaciones' => [
             'tipo' => self::CAPACITACION,
             'plural' => 'Capacitaciones',
             'singular' => 'capacitación',
             'nuevo' => 'Nueva capacitación',
             'icono' => 'ki-book-open',
-            'publico' => Contacto::CATEDRATICO,
-            'publico_texto' => 'catedráticos',
+            'publico' => Contacto::CLIENTE,
+            'publico_texto' => 'clientes',
         ],
     ];
 
@@ -63,7 +53,7 @@ class Evento extends Model
     /** Momento en que sale el recordatorio automático (p. ej. el día anterior a las 07:00). */
     public function momentoRecordatorio(): \Illuminate\Support\Carbon
     {
-        $conf = config('colegio.recordatorio');
+        $conf = config('academia.recordatorio');
 
         return $this->inicio->copy()->subDays($conf['dias_antes'])->setTimeFromTimeString($conf['hora']);
     }
@@ -74,7 +64,7 @@ class Evento extends Model
      */
     public static function conRecordatorioPendiente(): \Illuminate\Support\Collection
     {
-        $dias = config('colegio.recordatorio.dias_antes');
+        $dias = config('academia.recordatorio.dias_antes');
 
         return static::query()
             ->where('recordatorio_automatico', true)
@@ -95,7 +85,7 @@ class Evento extends Model
      */
     public function getEstadoRecordatorioAttribute(): string
     {
-        $automatico = config('colegio.recordatorio.automatico') && $this->recordatorio_automatico;
+        $automatico = config('academia.recordatorio.automatico') && $this->recordatorio_automatico;
 
         return match (true) {
             $this->recordatorio_enviado_at !== null => 'Enviado el '.$this->recordatorio_enviado_at->translatedFormat('j \d\e F \a \l\a\s H:i').'.',
@@ -162,7 +152,7 @@ class Evento extends Model
 
     public static function segmentoDe(string $tipo): string
     {
-        return $tipo === self::REUNION ? 'reuniones' : 'capacitaciones';
+        return 'capacitaciones';
     }
 
     public function config(): array

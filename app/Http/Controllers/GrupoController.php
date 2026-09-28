@@ -45,7 +45,7 @@ class GrupoController extends Controller implements HasMiddleware
     public function create(Request $request): View
     {
         return view('grupos.create', [
-            'grupo' => new Grupo(['tipo' => $request->input('tipo', Contacto::PADRE), 'sede_id' => $request->user()->sedeRestringida()]),
+            'grupo' => new Grupo(['tipo' => $request->input('tipo', Contacto::CLIENTE), 'sede_id' => $request->user()->sedeRestringida()]),
             'sedes' => $this->sedes($request),
         ]);
     }

@@ -49,7 +49,7 @@ class AsistenciaController extends Controller implements HasMiddleware
             };
             if ($pasa && $buscar !== '') {
                 $c = $fila['contacto'];
-                $pasa = str_contains(mb_strtolower($c->nombre_completo.' '.$c->estudiante.' '.$c->grado_seccion.' '.$c->area), $buscar);
+                $pasa = str_contains(mb_strtolower($c->nombre_completo.' '.$c->empresa.' '.$c->oficio), $buscar);
             }
 
             return $pasa;
@@ -120,9 +120,7 @@ class AsistenciaController extends Controller implements HasMiddleware
             ->map(fn (Contacto $c) => [
                 'id' => $c->id,
                 'nombre' => $c->nombre_completo,
-                'detalle' => $c->tipo === Contacto::PADRE
-                    ? trim('Padre/madre · '.$c->estudiante.' '.$c->grado_seccion)
-                    : trim('Catedrático · '.$c->area),
+                'detalle' => trim($c->empresa.' · '.$c->oficio, ' ·'),
             ]);
 
         return response()->json($resultados);
@@ -141,16 +139,15 @@ class AsistenciaController extends Controller implements HasMiddleware
 
     public function excel(Request $request, string $tipo, Evento $evento): StreamedResponse
     {
-        $config = $this->autorizar($request, $tipo, $evento);
-        $esPadre = $config['publico'] === Contacto::PADRE;
+        $this->autorizar($request, $tipo, $evento);
 
-        $filas = $this->lista($evento)->values()->map(function (array $f, int $i) use ($esPadre) {
+        $filas = $this->lista($evento)->values()->map(function (array $f, int $i) {
             $c = $f['contacto'];
             $inv = $f['invitacion'];
 
             return array_merge(
                 [$i + 1, $c->nombre_completo],
-                $esPadre ? [$c->estudiante, $c->grado_seccion] : [$c->area],
+                [$c->empresa, $c->oficio],
                 [
                     $c->correo ?: 'Sin correo',
                     match ($inv?->estado_envio) {
@@ -174,11 +171,10 @@ class AsistenciaController extends Controller implements HasMiddleware
             );
         });
 
-        $encabezados = array_merge(
-            ['#', $esPadre ? 'Padre o madre' : 'Catedrático'],
-            $esPadre ? ['Estudiante', 'Grado y sección'] : ['Curso o área'],
-            ['Correo', 'Invitación', 'Respuesta', 'Asistencia', 'Comentario']
-        );
+        $encabezados = [
+            '#', 'Cliente', 'Empresa', 'Oficio',
+            'Correo', 'Invitación', 'Respuesta', 'Asistencia', 'Comentario',
+        ];
 
         return ExcelTabla::descargar(
             'Asistencia',

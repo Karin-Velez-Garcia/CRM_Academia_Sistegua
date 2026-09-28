@@ -2,7 +2,7 @@
 
 @section('title', 'Sedes')
 @section('breadcrumb')
-    <li class="breadcrumb-item text-muted">Colegio</li>
+    <li class="breadcrumb-item text-muted">Academia</li>
 @endsection
 
 @section('acciones')
@@ -38,7 +38,7 @@
                     </div>
                     <div class="card-body pt-3">
                         <div class="d-flex flex-wrap gap-3 mb-5">
-                            @foreach ([['Padres', $sede->padres_count, 'padres'], ['Catedráticos', $sede->catedraticos_count, 'catedraticos']] as [$etq, $n, $seg])
+                            @foreach ([['Clientes', $sede->clientes_count, 'clientes']] as [$etq, $n, $seg])
                                 <a href="{{ route('contactos.index', [$seg, 'sede' => $sede->id]) }}"
                                    class="border border-gray-300 border-dashed rounded py-3 px-4 text-hover-primary flex-grow-1">
                                     <div class="fs-2 fw-bold text-gray-900">{{ number_format($n) }}</div>

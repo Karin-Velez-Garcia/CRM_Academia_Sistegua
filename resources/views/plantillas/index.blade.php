@@ -19,7 +19,7 @@
                     <div class="card-header border-0 pt-6">
                         <div class="card-title flex-column">
                             <h3 class="fw-bold mb-1">{{ $p->nombre }}</h3>
-                            <span class="text-muted fs-7 fw-semibold">{{ $p->tipo_evento === 'reunion' ? 'Reuniones con padres' : 'Capacitaciones para catedráticos' }}</span>
+                            <span class="text-muted fs-7 fw-semibold">Capacitaciones</span>
                         </div>
                         @if ($p->predeterminada)
                             <div class="card-toolbar"><span class="badge badge-light-primary">Predeterminada</span></div>

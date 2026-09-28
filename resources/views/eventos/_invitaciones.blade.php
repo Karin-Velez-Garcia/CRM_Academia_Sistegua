@@ -120,7 +120,7 @@
                         <tr>
                             <td>
                                 <div class="text-gray-900 fw-bold">{{ $inv->contacto->nombre_completo }}</div>
-                                <div class="text-muted">{{ $inv->correo }}@if ($inv->contacto->estudiante) · {{ $inv->contacto->estudiante }}@endif</div>
+                                <div class="text-muted">{{ $inv->correo }}@if ($inv->contacto->empresa) · {{ $inv->contacto->empresa }}@endif</div>
                             </td>
                             <td>
                                 <span class="badge badge-light-{{ $sitColor }}"><i class="ki-outline {{ $sitIcono }} fs-7 me-1 text-{{ $sitColor }}"></i>{{ $sitTxt }}</span>
@@ -130,7 +130,7 @@
                             <td class="text-nowrap">
                                 @if ($inv->respondida_at)
                                     {{ $inv->respondida_at->format('d/m H:i') }}
-                                    <div class="text-muted fs-8">{{ $inv->respuesta_por === 'personal' ? 'Registrado por el colegio' : 'Por correo' }}</div>
+                                    <div class="text-muted fs-8">{{ $inv->respuesta_por === 'personal' ? 'Registrado por la academia' : 'Por correo' }}</div>
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
@@ -275,7 +275,7 @@
                             </div>
                         </div>
                     @endforeach
-                    <div class="text-muted fs-8">Variables disponibles: {nombre}, {nombres}, {estudiante}, {titulo}, {fecha}, {hora}, {lugar}, {sede}.</div>
+                    <div class="text-muted fs-8">Variables disponibles: {nombre}, {nombres}, {empresa}, {oficio}, {titulo}, {fecha}, {hora}, {lugar}, {sede}, {academia}.</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>

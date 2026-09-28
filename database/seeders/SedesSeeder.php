@@ -9,14 +9,15 @@ use Illuminate\Database\Seeder;
 class SedesSeeder extends Seeder
 {
     /**
-     * Sedes del Colegio Esteca PC (municipio por código INE).
+     * Sedes de la academia (municipio por código INE).
+     * Ajustar a las sucursales reales de la empresa antes de producción.
      */
     public function run(): void
     {
         foreach ([
-            'Sanarate' => '0207', // Sanarate, El Progreso
-            'Salamá' => '1501',   // Salamá, Baja Verapaz
-            'Cobán' => '1601',    // Cobán, Alta Verapaz
+            'Ciudad de Guatemala' => '0101', // Guatemala, Guatemala
+            'Quetzaltenango' => '0901',      // Quetzaltenango, Quetzaltenango
+            'Escuintla' => '0501',           // Escuintla, Escuintla
         ] as $nombre => $codigo) {
             Sede::firstOrCreate(
                 ['nombre' => $nombre],

@@ -2,7 +2,7 @@
 
 @section('title', 'Grupos')
 @section('breadcrumb')
-    <li class="breadcrumb-item text-muted">Colegio</li>
+    <li class="breadcrumb-item text-muted">Academia</li>
 @endsection
 
 @section('acciones')
@@ -61,7 +61,7 @@
                                 @if ($g->descripcion)<span class="d-block fs-7 text-muted">{{ $g->descripcion }}</span>@endif
                             </td>
                             <td>
-                                <span class="badge badge-light-{{ ['padre' => 'primary', 'catedratico' => 'info', 'mixto' => 'warning'][$g->tipo] ?? 'secondary' }} fw-bold">
+                                <span class="badge badge-light-{{ 'primary' }} fw-bold">
                                     {{ \App\Models\Grupo::TIPOS[$g->tipo] ?? $g->tipo }}
                                 </span>
                             </td>
@@ -73,7 +73,7 @@
                         </tr>
                     @empty
                         <tr><td colspan="5" class="text-center text-muted py-10">
-                            No hay grupos. Los grupos sirven para enviar invitaciones a un conjunto de personas, por ejemplo "Padres de 3.º Básico".
+                            No hay grupos. Los grupos sirven para enviar invitaciones a un conjunto de personas, por ejemplo "Instaladores certificados".
                         </td></tr>
                     @endforelse
                     </tbody>

@@ -1,10 +1,9 @@
 @extends('layouts.app')
 
-@php($esPadre = $config['tipo'] === \App\Models\Contacto::PADRE)
 
 @section('title', $config['plural'])
 @section('breadcrumb')
-    <li class="breadcrumb-item text-muted">Colegio</li>
+    <li class="breadcrumb-item text-muted">Academia</li>
 @endsection
 
 @section('acciones')
@@ -40,7 +39,7 @@
                 <div class="d-flex align-items-center position-relative flex-grow-1 mw-350px">
                     <i class="ki-outline ki-magnifier fs-3 position-absolute ms-4"></i>
                     <input type="text" name="buscar" value="{{ request('buscar') }}" class="form-control form-control-solid ps-12"
-                           placeholder="{{ $esPadre ? 'Nombre, correo, DPI, estudiante o grado' : 'Nombre, correo, DPI o curso' }}">
+                           placeholder="Nombre, correo, DPI, empresa u oficio">
                 </div>
                 @if ($sedes->count() > 1)
                     <select name="sede" class="form-select form-select-solid w-auto">
@@ -101,8 +100,8 @@
                                 </div>
                             </th>
                         @endcan
-                        <th class="min-w-200px">{{ $esPadre ? 'Padre o madre' : 'Catedrático' }}</th>
-                        <th>{{ $esPadre ? 'Estudiante' : 'Curso o área' }}</th>
+                        <th class="min-w-200px">Cliente</th>
+                        <th>Empresa y oficio</th>
                         <th>Teléfono</th>
                         <th>Sede</th>
                         <th>Grupos</th>
@@ -123,7 +122,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="symbol symbol-circle symbol-40px me-3">
-                                        <span class="symbol-label bg-light-{{ $esPadre ? 'primary' : 'info' }} text-{{ $esPadre ? 'primary' : 'info' }} fw-bold">{{ $c->iniciales }}</span>
+                                        <span class="symbol-label bg-light-primary text-primary fw-bold">{{ $c->iniciales }}</span>
                                     </div>
                                     <div class="d-flex flex-column">
                                         <span class="text-gray-800 fw-bold">{{ $c->nombre_completo }}</span>
@@ -138,12 +137,8 @@
                                 </div>
                             </td>
                             <td>
-                                @if ($esPadre)
-                                    <span class="text-gray-800">{{ $c->estudiante ?: '—' }}</span>
-                                    @if ($c->grado_seccion)<span class="d-block fs-7">{{ $c->grado_seccion }}</span>@endif
-                                @else
-                                    {{ $c->area ?: '—' }}
-                                @endif
+                                <span class="text-gray-800">{{ $c->empresa ?: '—' }}</span>
+                                @if ($c->oficio)<span class="d-block fs-7">{{ $c->oficio }}</span>@endif
                             </td>
                             <td class="text-nowrap">{{ $c->telefono ?: '—' }}</td>
                             <td>{{ $c->sede->nombre }}</td>

@@ -22,13 +22,12 @@
     </style>
 </head>
 <body>
-@php($esPadre = $config['publico'] === \App\Models\Contacto::PADRE)
 <table class="enc" cellspacing="0" cellpadding="0">
     <tr>
-        <td style="width:70px"><img src="{{ public_path('assets/media/logos/esteca-icon.png') }}" style="height:56px" alt=""></td>
+        <td style="width:70px"><img src="{{ public_path('assets/media/logos/academia-icon.png') }}" style="height:56px" alt=""></td>
         <td>
             <div class="titulo">Lista de asistencia — {{ $evento->titulo }}</div>
-            <div class="sub">{{ config('colegio.nombre') }} · Sede {{ $evento->sede->nombre }} · {{ $evento->horario }}</div>
+            <div class="sub">{{ config('academia.nombre') }} · Sede {{ $evento->sede->nombre }} · {{ $evento->horario }}</div>
             <div class="sub">{{ $evento->es_virtual ? 'Virtual ('.$evento->plataforma.')' : $evento->lugar }}@if ($evento->facilitador) · Facilitador: {{ $evento->facilitador }}@endif</div>
         </td>
         <td style="text-align:right; width:140px" class="sub">
@@ -41,8 +40,8 @@
     <thead>
     <tr>
         <th class="num">#</th>
-        <th>{{ $esPadre ? 'Padre o madre' : 'Catedrático' }}</th>
-        <th>{{ $esPadre ? 'Estudiante / grado' : 'Curso o área' }}</th>
+        <th>Cliente</th>
+        <th>Empresa y oficio</th>
         <th class="chk">Confirmó</th>
         <th class="firma">Firma</th>
     </tr>
@@ -53,7 +52,7 @@
         <tr>
             <td class="num">{{ $i + 1 }}</td>
             <td><strong>{{ $c->nombre_completo }}</strong></td>
-            <td>{{ $esPadre ? trim($c->estudiante.' '.($c->grado_seccion ? '· '.$c->grado_seccion : '')) : $c->area }}</td>
+            <td>{{ trim($c->empresa.' '.($c->oficio ? '· '.$c->oficio : '')) ?: '—' }}</td>
             <td class="chk">@if ($fila['invitacion']?->respuesta === 'confirmada')<span class="ok">Sí</span>@endif</td>
             <td class="firma"></td>
         </tr>
@@ -64,6 +63,6 @@
     </tbody>
 </table>
 
-<div class="pie">Generado el {{ now()->format('d/m/Y H:i') }} · {{ config('colegio.nombre') }}</div>
+<div class="pie">Generado el {{ now()->format('d/m/Y H:i') }} · {{ config('academia.nombre') }}</div>
 </body>
 </html>

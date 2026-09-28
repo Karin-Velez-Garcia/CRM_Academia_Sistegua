@@ -1,4 +1,4 @@
-{{ config('colegio.nombre') }} — Sede {{ $evento->sede->nombre }}
+{{ config('academia.nombre') }} — Sede {{ $evento->sede->nombre }}
 
 {{ $evento->titulo }}
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Iniciar sesión · {{ config('app.name') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/media/logos/esteca-icon.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/media/logos/academia-icon.png') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700">
     <link rel="stylesheet" href="{{ asset('assets/plugins/keenicons/outline/style.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.bundle.css') }}">
@@ -24,7 +24,7 @@
                         @csrf
                         <div class="text-center mb-11">
                             <h1 class="text-gray-900 fw-bolder mb-3">Iniciar sesión</h1>
-                            <div class="text-gray-500 fw-semibold fs-6">{{ config('colegio.nombre') }}</div>
+                            <div class="text-gray-500 fw-semibold fs-6">{{ config('academia.nombre') }}</div>
                         </div>
 
                         @if ($errors->any())
@@ -66,7 +66,7 @@
                 </div>
             </div>
             <div class="d-flex flex-center flex-wrap px-5">
-                <span class="text-muted fw-semibold fs-7">{{ config('colegio.nombre') }} © {{ now()->year }} · {{ implode(' · ', config('colegio.sedes')) }}</span>
+                <span class="text-muted fw-semibold fs-7">{{ config('academia.nombre') }} © {{ now()->year }} · {{ implode(' · ', config('academia.sedes')) }}</span>
             </div>
         </div>
 
@@ -74,14 +74,14 @@
              style="background-image: url('{{ asset('assets/media/auth-bg.png') }}')">
             <div class="d-flex flex-column flex-center py-10 py-lg-15 px-5 px-md-15 w-100">
                 <div class="bg-white rounded-4 shadow-sm p-5 p-lg-7 mb-8 mb-lg-10">
-                    <img alt="{{ config('colegio.nombre') }}" src="{{ asset('assets/media/logos/esteca-logo.png') }}" class="logo-login">
+                    <img alt="{{ config('academia.nombre') }}" src="{{ asset('assets/media/logos/academia-logo.png') }}" class="logo-login">
                 </div>
-                <h1 class="text-white fs-2qx fw-bolder text-center mb-4">{{ config('colegio.nombre') }}</h1>
+                <h1 class="text-white fs-2qx fw-bolder text-center mb-4">{{ config('academia.nombre') }}</h1>
                 <div class="text-white fs-base text-center opacity-75 mb-6">
-                    Reuniones con padres de familia y capacitaciones para catedráticos.
+                    Reuniones con clientes y capacitaciones para clientes.
                 </div>
                 <div class="d-flex flex-wrap flex-center gap-2">
-                    @foreach (config('colegio.sedes') as $sede)
+                    @foreach (config('academia.sedes') as $sede)
                         <span class="badge bg-white bg-opacity-20 text-white fw-semibold fs-7 px-4 py-2">Sede {{ $sede }}</span>
                     @endforeach
                 </div>
