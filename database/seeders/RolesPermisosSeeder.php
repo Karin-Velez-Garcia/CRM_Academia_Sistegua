@@ -14,15 +14,16 @@ class RolesPermisosSeeder extends Seeder
      * Módulos del sistema y las acciones que se pueden permitir en cada uno.
      */
     public const MODULOS = [
-        'usuarios' => ['ver', 'crear', 'editar', 'eliminar'],
+        'usuarios' => ['ver', 'crear', 'editar', 'desactivar'],
         'roles' => ['ver', 'crear', 'editar', 'eliminar'],
         'geografia' => ['ver'],
-        'sedes' => ['ver', 'crear', 'editar', 'eliminar'],
-        'contactos' => ['ver', 'crear', 'editar', 'eliminar', 'importar'],
+        'sedes' => ['ver', 'crear', 'editar', 'desactivar'],
+        'contactos' => ['ver', 'crear', 'editar', 'desactivar', 'importar'],
         'eventos' => ['ver', 'crear', 'editar', 'eliminar', 'asistencia'],
-        'campanias' => ['ver', 'crear', 'editar', 'eliminar', 'enviar'],
+        'campanias' => ['ver', 'crear', 'editar', 'desactivar', 'enviar'],
         'certificados' => ['ver', 'crear', 'editar', 'eliminar'],
         'reportes' => ['ver', 'exportar'],
+        'correo' => ['ver', 'editar'],
     ];
 
     /** Permisos iniciales de cada rol (el Administrador tiene todos). */
@@ -31,9 +32,9 @@ class RolesPermisosSeeder extends Seeder
         'Director de sede' => [
             'geografia.ver',
             'sedes.ver',
-            'contactos.ver', 'contactos.crear', 'contactos.editar', 'contactos.eliminar', 'contactos.importar',
+            'contactos.ver', 'contactos.crear', 'contactos.editar', 'contactos.desactivar', 'contactos.importar',
             'eventos.ver', 'eventos.crear', 'eventos.editar', 'eventos.eliminar', 'eventos.asistencia',
-            'campanias.ver', 'campanias.crear', 'campanias.editar', 'campanias.eliminar', 'campanias.enviar',
+            'campanias.ver', 'campanias.crear', 'campanias.editar', 'campanias.desactivar', 'campanias.enviar',
             'certificados.ver', 'certificados.crear', 'certificados.editar',
             'reportes.ver', 'reportes.exportar',
         ],
@@ -49,9 +50,24 @@ class RolesPermisosSeeder extends Seeder
         ],
     ];
 
+    /** Módulos donde ya no se elimina: el permiso "eliminar" pasó a ser "desactivar". */
+    private const RENOMBRADOS = [
+        'usuarios.eliminar' => 'usuarios.desactivar',
+        'sedes.eliminar' => 'sedes.desactivar',
+        'contactos.eliminar' => 'contactos.desactivar',
+        'campanias.eliminar' => 'campanias.desactivar',
+    ];
+
     public function run(): void
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Se renombra en lugar de crear uno nuevo para que cada rol conserve lo que tenía
+        foreach (self::RENOMBRADOS as $anterior => $nuevo) {
+            if (! Permission::where('name', $nuevo)->exists()) {
+                Permission::where('name', $anterior)->update(['name' => $nuevo]);
+            }
+        }
 
         $nuevos = [];
         foreach (self::MODULOS as $modulo => $acciones) {

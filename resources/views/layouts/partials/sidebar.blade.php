@@ -64,11 +64,11 @@
                     {!! $item('reportes.eventos', 'reportes.*', 'ki-chart-simple', 'Reportes') !!}
                 @endcan
 
-                @canany(['usuarios.ver', 'roles.ver', 'geografia.ver'])
+                @canany(['usuarios.ver', 'roles.ver', 'correo.ver'])
                     {!! $seccion('Administración') !!}
                     @can('usuarios.ver') {!! $item('usuarios.index', 'usuarios.*', 'ki-profile-user', 'Usuarios') !!} @endcan
                     @can('roles.ver') {!! $item('roles.index', 'roles.*', 'ki-shield-tick', 'Roles y permisos') !!} @endcan
-                    @can('geografia.ver') {!! $item('geografia.index', 'geografia.*', 'ki-map', 'Departamentos') !!} @endcan
+                    @can('correo.ver') {!! $item('correo.edit', 'correo.*', 'ki-send', 'Correo de envío') !!} @endcan
                 @endcanany
             </div>
         </div>

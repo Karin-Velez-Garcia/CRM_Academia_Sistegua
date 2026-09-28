@@ -17,7 +17,7 @@
     <div class="card">
         <div class="card-header border-0 pt-6 flex-column align-items-stretch gap-4">
             <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x border-transparent fs-6 fw-bold">
-                @foreach (['proximos' => 'Próximos', 'realizados' => 'Realizados', 'cancelados' => 'Cancelados', 'todos' => 'Todos'] as $clave => $etq)
+                @foreach (['proximos' => 'Próximos', 'realizados' => 'Realizados', 'cancelados' => 'Anulados', 'todos' => 'Todos'] as $clave => $etq)
                     <li class="nav-item">
                         <a class="nav-link text-active-primary {{ $estado === $clave ? 'active' : '' }}"
                            href="{{ route('eventos.index', [$segmento, 'estado' => $clave] + request()->only(['buscar', 'sede', 'modalidad'])) }}">{{ $etq }}</a>

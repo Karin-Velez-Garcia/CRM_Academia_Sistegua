@@ -35,8 +35,13 @@
                         @endforeach
                     </select>
                 @endif
+                <select name="estado" class="form-select form-select-solid w-auto">
+                    <option value="activos">Activos</option>
+                    <option value="inactivos" @selected(request('estado') === 'inactivos')>Inactivos</option>
+                    <option value="todos" @selected(request('estado') === 'todos')>Activos e inactivos</option>
+                </select>
                 <button type="submit" class="btn btn-light-primary">Filtrar</button>
-                @if (request()->hasAny(['buscar', 'tipo', 'sede']))
+                @if (request()->hasAny(['buscar', 'tipo', 'sede', 'estado']))
                     <a href="{{ route('grupos.index') }}" class="btn btn-light">Limpiar</a>
                 @endif
             </form>
@@ -58,6 +63,7 @@
                         <tr>
                             <td>
                                 <a href="{{ route('grupos.show', $g) }}" class="text-gray-800 text-hover-primary fw-bold">{{ $g->nombre }}</a>
+                                @unless ($g->activo)<span class="badge badge-light-danger ms-1">Inactivo</span>@endunless
                                 @if ($g->descripcion)<span class="d-block fs-7 text-muted">{{ $g->descripcion }}</span>@endif
                             </td>
                             <td>

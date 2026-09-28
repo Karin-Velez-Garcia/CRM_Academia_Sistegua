@@ -13,9 +13,14 @@ class Grupo extends Model
         Contacto::CLIENTE => 'Clientes',
     ];
 
-    protected $fillable = ['nombre', 'descripcion', 'tipo', 'sede_id'];
+    protected $fillable = ['nombre', 'descripcion', 'tipo', 'sede_id', 'activo'];
 
-    protected $attributes = ['tipo' => Contacto::CLIENTE];
+    protected $attributes = ['tipo' => Contacto::CLIENTE, 'activo' => true];
+
+    protected function casts(): array
+    {
+        return ['activo' => 'boolean'];
+    }
 
     public function sede(): BelongsTo
     {
@@ -25,6 +30,15 @@ class Grupo extends Model
     public function contactos(): BelongsToMany
     {
         return $this->belongsToMany(Contacto::class);
+    }
+
+    /** Grupos que se pueden elegir; con $incluir se agregan los inactivos que ya estaban elegidos. */
+    public function scopeActivos(Builder $query, iterable $incluir = []): Builder
+    {
+        $ids = collect($incluir)->all();
+
+        return $query->where(fn ($q) => $q->where('grupos.activo', true)
+            ->when($ids, fn ($w) => $w->orWhereIn('grupos.id', $ids)));
     }
 
     /**

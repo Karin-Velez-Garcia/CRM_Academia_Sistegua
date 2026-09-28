@@ -12,6 +12,7 @@ class Envio extends Model
         'recordatorio' => 'Recordatorio',
         'recordatorio_auto' => 'Recordatorio automático',
         'cambio' => 'Aviso de cambio',
+        'posposicion' => 'Aviso de nueva fecha',
         'cancelacion' => 'Aviso de cancelación',
         'constancia' => 'Constancias',
     ];

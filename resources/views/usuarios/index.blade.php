@@ -78,7 +78,7 @@
                                 @endif
                             </td>
                             <td class="text-end text-nowrap">
-                                @can('usuarios.editar')
+                                @can('usuarios.desactivar')
                                     <form method="POST" action="{{ route('usuarios.estado', $u) }}" class="d-inline"
                                           data-confirmar="{{ $u->activo ? "¿Desactivar a {$u->nombre_completo}? Ya no podrá ingresar." : "¿Activar a {$u->nombre_completo}?" }}">
                                         @csrf @method('PATCH')
@@ -87,20 +87,12 @@
                                             <i class="ki-outline {{ $u->activo ? 'ki-lock' : 'ki-lock-2' }} fs-3"></i>
                                         </button>
                                     </form>
-                                    <a href="{{ route('usuarios.edit', $u) }}" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1"
+                                @endcan
+                                @can('usuarios.editar')
+                                    <a href="{{ route('usuarios.edit', $u) }}" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm"
                                        data-bs-toggle="tooltip" title="Editar">
                                         <i class="ki-outline ki-pencil fs-3"></i>
                                     </a>
-                                @endcan
-                                @can('usuarios.eliminar')
-                                    <form method="POST" action="{{ route('usuarios.destroy', $u) }}" class="d-inline"
-                                          data-confirmar="¿Eliminar al usuario {{ $u->nombre_completo }}? Esta acción no se puede deshacer.">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm"
-                                                data-bs-toggle="tooltip" title="Eliminar">
-                                            <i class="ki-outline ki-trash fs-3"></i>
-                                        </button>
-                                    </form>
                                 @endcan
                             </td>
                         </tr>

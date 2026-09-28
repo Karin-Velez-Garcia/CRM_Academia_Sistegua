@@ -20,8 +20,8 @@ class UserController extends Controller implements HasMiddleware
         return [
             new Middleware('permission:usuarios.ver', only: ['index']),
             new Middleware('permission:usuarios.crear', only: ['create', 'store']),
-            new Middleware('permission:usuarios.editar', only: ['edit', 'update', 'toggleActivo']),
-            new Middleware('permission:usuarios.eliminar', only: ['destroy']),
+            new Middleware('permission:usuarios.editar', only: ['edit', 'update']),
+            new Middleware('permission:usuarios.desactivar', only: ['toggleActivo']),
         ];
     }
 
@@ -100,22 +100,6 @@ class UserController extends Controller implements HasMiddleware
         return back()->with('success', $nuevoEstado
             ? "Se activó a {$usuario->nombre_completo}."
             : "Se desactivó a {$usuario->nombre_completo}.");
-    }
-
-    public function destroy(Request $request, User $usuario): RedirectResponse
-    {
-        if ($usuario->is($request->user())) {
-            return back()->with('error', 'No puede eliminar su propio usuario.');
-        }
-
-        if ($usuario->hasRole(User::ROL_ADMINISTRADOR) && $this->administradoresActivos() <= 1) {
-            return back()->with('error', 'No se puede eliminar al último administrador activo.');
-        }
-
-        $nombre = $usuario->nombre_completo;
-        $usuario->delete();
-
-        return redirect()->route('usuarios.index')->with('success', "Se eliminó el usuario {$nombre}.");
     }
 
     private function validar(Request $request, ?User $usuario = null): array

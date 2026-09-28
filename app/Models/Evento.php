@@ -192,6 +192,15 @@ class Evento extends Model
         return $this->hasMany(Envio::class)->latest();
     }
 
+    /**
+     * Si alguien ya recibió (o está por recibir) la invitación, el evento no se puede eliminar:
+     * solo anular o posponer, y siempre avisando por correo.
+     */
+    public function tieneInvitacionesEnviadas(): bool
+    {
+        return $this->invitaciones()->whereIn('estado_envio', [Invitacion::ENVIADA, Invitacion::PENDIENTE])->exists();
+    }
+
     /** Se aceptan respuestas mientras el evento no haya terminado ni esté cancelado. */
     public function getAceptaRespuestasAttribute(): bool
     {
@@ -236,7 +245,7 @@ class Evento extends Model
     public function getEstadoEtiquetaAttribute(): array
     {
         return [
-            'cancelado' => ['Cancelado', 'danger'],
+            'cancelado' => ['Anulado', 'danger'],
             'realizado' => ['Realizado', 'dark'],
             'en_curso' => ['En curso', 'success'],
             'programado' => ['Programado', 'primary'],
@@ -287,12 +296,12 @@ class Evento extends Model
     }
 
     /**
-     * Personas a las que va dirigido, sin repetir: todos los del público de la sede,
+     * Personas activas a las que va dirigido, sin repetir: todos los del público de la sede,
      * o los miembros de los grupos elegidos que pertenecen a la sede del evento.
      */
     public function destinatarios(): Builder
     {
-        $query = Contacto::query()->where('sede_id', $this->sede_id);
+        $query = Contacto::query()->activos()->where('sede_id', $this->sede_id);
 
         if ($this->para_todos) {
             return $query->where('tipo', $this->config()['publico']);

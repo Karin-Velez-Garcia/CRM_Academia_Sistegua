@@ -14,7 +14,7 @@
                 'rutaExcel' => route('reportes.eventos.excel', request()->query()),
                 'extra' => new \Illuminate\Support\HtmlString(
                     '<label class="form-check form-check-sm form-check-custom form-check-solid mb-2"><input class="form-check-input" type="checkbox" name="cancelados" value="1" '
-                    .(request()->boolean('cancelados') ? 'checked' : '').'><span class="form-check-label fs-7">Incluir cancelados</span></label>'),
+                    .(request()->boolean('cancelados') ? 'checked' : '').'><span class="form-check-label fs-7">Incluir anulados</span></label>'),
             ])
         </div>
     </div>
@@ -94,7 +94,7 @@
                                 <a href="{{ route('eventos.show', [\App\Models\Evento::segmentoDe($e->tipo), $e]) }}" class="text-gray-900 text-hover-primary fw-bold">{{ $e->titulo }}</a>
                                 <div class="fs-7 text-muted">
                                     {{ $e->tipo === 'reunion' ? 'Reunión' : 'Capacitación' }} · {{ $e->es_virtual ? 'Virtual' : 'Presencial' }}
-                                    @if ($e->cancelado_at)<span class="badge badge-light-danger ms-1">Cancelado</span>@endif
+                                    @if ($e->cancelado_at)<span class="badge badge-light-danger ms-1">Anulado</span>@endif
                                 </div>
                             </td>
                             <td>{{ $e->sede->nombre }}</td>

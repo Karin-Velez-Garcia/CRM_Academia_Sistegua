@@ -22,7 +22,7 @@ class GrupoController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:contactos.ver', only: ['index', 'show']),
-            new Middleware('permission:contactos.editar', only: ['create', 'store', 'edit', 'update', 'destroy', 'quitar']),
+            new Middleware('permission:contactos.editar', only: ['create', 'store', 'edit', 'update', 'estado', 'quitar']),
         ];
     }
 
@@ -33,6 +33,7 @@ class GrupoController extends Controller implements HasMiddleware
         $grupos = Grupo::with('sede')
             ->withCount('contactos')
             ->when($sede, fn ($q) => $q->where(fn ($w) => $w->whereNull('sede_id')->orWhere('sede_id', $sede)))
+            ->when($request->input('estado', 'activos') !== 'todos', fn ($q) => $q->where('activo', $request->input('estado', 'activos') === 'activos'))
             ->when($request->filled('tipo'), fn ($q) => $q->where('tipo', $request->input('tipo')))
             ->when($request->filled('sede'), fn ($q) => $q->where('sede_id', $request->integer('sede')))
             ->when($request->filled('buscar'), fn ($q) => $q->where('nombre', 'like', '%'.$request->input('buscar').'%'))
@@ -104,13 +105,13 @@ class GrupoController extends Controller implements HasMiddleware
         return redirect()->route('grupos.show', $grupo)->with('success', $mensaje);
     }
 
-    public function destroy(Request $request, Grupo $grupo): RedirectResponse
+    /** Los grupos no se eliminan: los inactivos conservan sus miembros, pero ya no se ofrecen al crear capacitaciones. */
+    public function estado(Request $request, Grupo $grupo): RedirectResponse
     {
         $this->autorizar($request, $grupo, editar: true);
-        $nombre = $grupo->nombre;
-        $grupo->delete(); // los contactos no se eliminan, solo la pertenencia
+        $grupo->update(['activo' => ! $grupo->activo]);
 
-        return redirect()->route('grupos.index')->with('success', "Se eliminó el grupo {$nombre}. Los contactos siguen registrados.");
+        return back()->with('success', $grupo->activo ? "Se activó el grupo {$grupo->nombre}." : "Se desactivó el grupo {$grupo->nombre}.");
     }
 
     public function quitar(Request $request, Grupo $grupo, Contacto $contacto): RedirectResponse

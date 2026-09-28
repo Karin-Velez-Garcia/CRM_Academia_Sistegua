@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AsistenciaController;
+use App\Http\Controllers\ConfiguracionCorreoController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ConstanciaController;
 use App\Http\Controllers\ContactoController;
@@ -56,7 +57,8 @@ Route::middleware(['auth', 'activo'])->group(function () {
     Route::put('/perfil/password', [PerfilController::class, 'password'])->name('perfil.password');
 
     // Academia
-    Route::resource('sedes', SedeController::class)->except('show');
+    Route::resource('sedes', SedeController::class)->except(['show', 'destroy']);
+    Route::patch('/sedes/{sede}/estado', [SedeController::class, 'estado'])->name('sedes.estado');
 
     // Clientes (/contactos/clientes)
     Route::prefix('contactos/{tipo}')->whereIn('tipo', array_keys(\App\Models\Contacto::TIPOS))
@@ -71,7 +73,7 @@ Route::middleware(['auth', 'activo'])->group(function () {
             Route::post('/masivo', 'masivo')->name('masivo');
             Route::get('/{contacto}/editar', 'edit')->name('edit');
             Route::put('/{contacto}', 'update')->name('update');
-            Route::delete('/{contacto}', 'destroy')->name('destroy');
+            Route::patch('/{contacto}/estado', 'estado')->name('estado');
         });
 
     // Capacitaciones (/eventos/capacitaciones)
@@ -85,6 +87,7 @@ Route::middleware(['auth', 'activo'])->group(function () {
             Route::put('/{evento}', 'update')->name('update');
             Route::delete('/{evento}', 'destroy')->name('destroy');
             Route::patch('/{evento}/cancelar', 'cancelar')->name('cancelar');
+            Route::patch('/{evento}/posponer', 'posponer')->name('posponer');
             Route::patch('/{evento}/reactivar', 'reactivar')->name('reactivar');
             Route::get('/{evento}/duplicar', 'duplicar')->name('duplicar');
             Route::get('/{evento}/calendario.ics', 'calendario')->name('calendario');
@@ -149,20 +152,28 @@ Route::middleware(['auth', 'activo'])->group(function () {
     });
 
     Route::get('/invitaciones', [InvitacionController::class, 'index'])->name('invitaciones.index');
-    Route::resource('plantillas', PlantillaController::class)->except('show');
+    Route::resource('plantillas', PlantillaController::class)->except(['show', 'destroy']);
+    Route::patch('/plantillas/{plantilla}/estado', [PlantillaController::class, 'estado'])->name('plantillas.estado');
 
-    Route::resource('grupos', GrupoController::class);
+    Route::resource('grupos', GrupoController::class)->except('destroy');
+    Route::patch('/grupos/{grupo}/estado', [GrupoController::class, 'estado'])->name('grupos.estado');
     Route::delete('/grupos/{grupo}/contactos/{contacto}', [GrupoController::class, 'quitar'])->name('grupos.quitar');
 
     // Administración
     Route::resource('usuarios', UserController::class)
         ->parameters(['usuarios' => 'usuario'])
-        ->except('show');
+        ->except(['show', 'destroy']);
     Route::patch('/usuarios/{usuario}/estado', [UserController::class, 'toggleActivo'])->name('usuarios.estado');
 
     Route::resource('roles', RoleController::class)
         ->parameters(['roles' => 'rol'])
         ->except('show');
+
+    // Cuenta desde la que salen los correos
+    Route::get('/configuracion/correo', [ConfiguracionCorreoController::class, 'edit'])->name('correo.edit');
+    Route::put('/configuracion/correo', [ConfiguracionCorreoController::class, 'update'])->name('correo.update');
+    Route::post('/configuracion/correo/prueba', [ConfiguracionCorreoController::class, 'probar'])
+        ->middleware('throttle:10,1')->name('correo.probar');
 
     Route::middleware('permission:geografia.ver')->group(function () {
         Route::get('/geografia', [GeografiaController::class, 'index'])->name('geografia.index');

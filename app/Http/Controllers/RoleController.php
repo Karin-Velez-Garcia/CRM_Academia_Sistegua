@@ -20,10 +20,12 @@ class RoleController extends Controller implements HasMiddleware
         'roles' => 'Roles y permisos',
         'geografia' => 'Departamentos y municipios',
         'sedes' => 'Sedes',
-        'contactos' => 'Padres de familia y catedráticos',
-        'eventos' => 'Reuniones y capacitaciones',
+        'contactos' => 'Clientes y grupos',
+        'eventos' => 'Capacitaciones',
         'campanias' => 'Invitaciones y plantillas',
+        'certificados' => 'Certificados',
         'reportes' => 'Reportes',
+        'correo' => 'Correo de envío',
     ];
 
     public static function middleware(): array

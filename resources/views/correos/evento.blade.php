@@ -8,6 +8,7 @@
         'invitacion' => $evento->tipo === 'reunion' ? 'Invitación a reunión' : 'Convocatoria a capacitación',
         'recordatorio' => 'Recordatorio',
         'cambio' => 'Cambio en la actividad',
+        'posposicion' => 'Actividad pospuesta',
         'cancelacion' => 'Actividad cancelada',
     ][$motivo] ?? '';
 @endphp

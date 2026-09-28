@@ -28,6 +28,7 @@
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('certificados.vista-previa', $plantilla) }}" target="_blank" class="btn btn-light">Vista previa PDF</a>
+                    <a href="{{ route('certificados.index') }}" class="btn btn-light">Cancelar</a>
                     <button type="submit" class="btn btn-primary">Guardar diseño</button>
                 </div>
             </div>

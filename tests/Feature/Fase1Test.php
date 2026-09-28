@@ -95,8 +95,10 @@ class Fase1Test extends TestCase
         $this->assertTrue($maria->fresh()->hasRole('Director de sede'));
         $this->assertSame('María José', $maria->fresh()->name);
 
-        $this->actingAs($admin)->delete(route('usuarios.destroy', $maria))->assertRedirect(route('usuarios.index'));
-        $this->assertModelMissing($maria);
+        // Los usuarios no se eliminan: se desactivan
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('usuarios.destroy'));
+        $this->actingAs($admin)->patch(route('usuarios.estado', $maria))->assertSessionHas('success');
+        $this->assertFalse($maria->fresh()->activo);
     }
 
     public function test_validaciones_de_usuario_en_espanol(): void
@@ -117,8 +119,7 @@ class Fase1Test extends TestCase
     {
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
 
-        // No puede eliminarse ni desactivarse a sí mismo
-        $this->actingAs($admin)->delete(route('usuarios.destroy', $admin))->assertSessionHas('error');
+        // No puede desactivarse a sí mismo
         $this->actingAs($admin)->patch(route('usuarios.estado', $admin))->assertSessionHas('error');
         $this->assertModelExists($admin);
         $this->assertTrue($admin->fresh()->activo);

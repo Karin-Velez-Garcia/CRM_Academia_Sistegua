@@ -29,7 +29,7 @@ class EventoController extends Controller implements HasMiddleware
         return [
             new Middleware('permission:eventos.ver', only: ['index', 'show', 'calendario']),
             new Middleware('permission:eventos.crear', only: ['create', 'store', 'duplicar']),
-            new Middleware('permission:eventos.editar', only: ['edit', 'update', 'cancelar', 'reactivar']),
+            new Middleware('permission:eventos.editar', only: ['edit', 'update', 'cancelar', 'posponer', 'reactivar']),
             new Middleware('permission:eventos.eliminar', only: ['destroy']),
         ];
     }
@@ -126,11 +126,13 @@ class EventoController extends Controller implements HasMiddleware
             'porInvitar' => $servicio->porInvitar()->count(),
             'porRecordar' => $servicio->porRecordar()->count(),
             'confirmadosPorRecordar' => $servicio->confirmadosPorRecordar()->count(),
+            'porAvisar' => $servicio->porAvisar()->count(),
+            'tieneEnviadas' => $evento->tieneInvitacionesEnviadas(),
             'control' => $evento->control(),
             'invitaciones' => $invitaciones,
             'resumen' => $resumen,
             'situacion' => $situacion,
-            'plantillas' => Plantilla::where('tipo_evento', $evento->tipo)->orderByDesc('predeterminada')->orderBy('nombre')->get(),
+            'plantillas' => Plantilla::where('tipo_evento', $evento->tipo)->where('activa', true)->orderByDesc('predeterminada')->orderBy('nombre')->get(),
             'textosRecordatorio' => InvitacionesEvento::TEXTOS_AUTOMATICOS,
             'modoPrueba' => config('mail.default') === 'log',
         ]);
@@ -150,9 +152,11 @@ class EventoController extends Controller implements HasMiddleware
         $this->autorizar($request, $evento, $config['tipo']);
         [$datos, $grupos] = $this->validar($request, $config);
 
+        $fechaAnterior = $evento->inicio->copy();
         $evento->fill($datos);
         // Cambios que afectan a los invitados: cuándo y dónde
         $cambioImportante = $evento->isDirty(['inicio', 'fin', 'modalidad', 'lugar', 'enlace']);
+        $cambioFecha = ! $evento->inicio->isSameDay($fechaAnterior);
         // Si se movió la fecha, el recordatorio automático se vuelve a programar para la nueva fecha
         if ($evento->isDirty('inicio')) {
             $evento->recordatorio_enviado_at = null;
@@ -160,9 +164,13 @@ class EventoController extends Controller implements HasMiddleware
         $evento->save();
         $evento->grupos()->sync($grupos);
 
+        // Con invitaciones ya enviadas, todo cambio de fecha, hora o lugar se avisa siempre por correo
         $mensaje = 'Se guardaron los cambios.';
-        if ($cambioImportante && $request->boolean('avisar_cambio') && $evento->acepta_respuestas) {
-            $avisados = (new InvitacionesEvento($evento))->avisar('cambio', $request->user());
+        if ($cambioImportante && $evento->acepta_respuestas && $evento->tieneInvitacionesEnviadas()) {
+            $servicio = new InvitacionesEvento($evento);
+            $avisados = $cambioFecha
+                ? $servicio->avisar('posposicion', $request->user(), nota: 'Fecha anterior: '.$this->fechaTexto($fechaAnterior).'.')
+                : $servicio->avisar('cambio', $request->user());
             $mensaje .= $avisados ? " Se avisó del cambio por correo a {$avisados} invitados." : '';
         }
 
@@ -174,6 +182,10 @@ class EventoController extends Controller implements HasMiddleware
         $config = $this->config($tipo);
         $this->autorizar($request, $evento, $config['tipo']);
 
+        if ($evento->tieneInvitacionesEnviadas()) {
+            return back()->with('error', "No se puede eliminar porque ya se enviaron invitaciones. Puede anularla o posponerla; en ambos casos se avisa por correo a los invitados.");
+        }
+
         $titulo = $evento->titulo;
         $evento->delete();
 
@@ -184,17 +196,67 @@ class EventoController extends Controller implements HasMiddleware
     {
         $config = $this->config($tipo);
         $this->autorizar($request, $evento, $config['tipo']);
-        $datos = $request->validate(['motivo' => ['nullable', 'string', 'max:255'], 'avisar' => ['boolean']]);
+        abort_if($evento->cancelado_at !== null, 404);
+        $datos = $request->validate(['motivo' => ['nullable', 'string', 'max:255']]);
 
         $evento->forceFill(['cancelado_at' => now(), 'motivo_cancelacion' => $datos['motivo'] ?? null])->save();
 
-        $mensaje = ucfirst($config['singular']).' cancelada. Sigue en el historial.';
-        if ($request->boolean('avisar')) {
+        // Quien ya tiene la invitación siempre recibe el aviso de anulación
+        $mensaje = ucfirst($config['singular']).' anulada. Sigue en el historial.';
+        if ($evento->tieneInvitacionesEnviadas()) {
             $avisados = (new InvitacionesEvento($evento))->avisar('cancelacion', $request->user());
             $mensaje .= $avisados ? " Se avisó por correo a {$avisados} invitados." : '';
         }
 
         return back()->with('success', $mensaje);
+    }
+
+    /** Cambia la fecha y avisa a los invitados de la nueva fecha (con la anterior y el motivo). */
+    public function posponer(Request $request, string $tipo, Evento $evento): RedirectResponse
+    {
+        $config = $this->config($tipo);
+        $this->autorizar($request, $evento, $config['tipo']);
+        abort_if($evento->cancelado_at !== null, 404);
+
+        $datos = $request->validateWithBag('posponer', [
+            'fecha' => ['required', 'date_format:Y-m-d'],
+            'hora_inicio' => ['required', 'date_format:H:i'],
+            'hora_fin' => ['required', 'date_format:H:i', 'after:hora_inicio'],
+            'motivo' => ['nullable', 'string', 'max:255'],
+        ], [
+            'hora_fin.after' => 'La hora de fin debe ser posterior a la de inicio.',
+        ], ['hora_inicio' => 'hora de inicio', 'hora_fin' => 'hora de fin']);
+
+        $zona = config('app.timezone');
+        $inicio = Carbon::createFromFormat('Y-m-d H:i', "{$datos['fecha']} {$datos['hora_inicio']}", $zona);
+        $fin = Carbon::createFromFormat('Y-m-d H:i', "{$datos['fecha']} {$datos['hora_fin']}", $zona);
+
+        if ($inicio->isPast()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['fecha' => 'La nueva fecha debe ser posterior a hoy.'])
+                ->errorBag('posponer');
+        }
+        if ($inicio->equalTo($evento->inicio) && $fin->equalTo($evento->fin)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['fecha' => 'Indique una fecha u hora distinta de la actual.'])
+                ->errorBag('posponer');
+        }
+
+        $anterior = $evento->inicio->copy();
+        // El recordatorio automático se vuelve a programar para la nueva fecha
+        $evento->forceFill(['inicio' => $inicio, 'fin' => $fin, 'recordatorio_enviado_at' => null])->save();
+
+        $nota = 'Fecha anterior: '.$this->fechaTexto($anterior).'.'
+            .(filled($datos['motivo'] ?? null) ? "\nMotivo: {$datos['motivo']}" : '');
+        $avisados = $evento->tieneInvitacionesEnviadas()
+            ? (new InvitacionesEvento($evento))->avisar('posposicion', $request->user(), nota: $nota)
+            : 0;
+
+        return back()->with('success', ucfirst($config['singular']).' pospuesta para el '.$this->fechaTexto($inicio).'.'
+            .($avisados ? " Se avisó de la nueva fecha por correo a {$avisados} invitados." : ''));
+    }
+
+    private function fechaTexto(Carbon $fecha): string
+    {
+        return $fecha->translatedFormat('l j \d\e F \d\e Y').' a las '.$fecha->format('H:i');
     }
 
     public function reactivar(Request $request, string $tipo, Evento $evento): RedirectResponse
@@ -277,9 +339,10 @@ class EventoController extends Controller implements HasMiddleware
             ->orderBy('nombre')->get();
     }
 
-    private function gruposPermitidos(Request $request, array $config)
+    /** Grupos activos que se pueden elegir; $incluir agrega los inactivos que el evento ya tenía. */
+    private function gruposPermitidos(Request $request, array $config, iterable $incluir = [])
     {
-        return Grupo::compatibles($config['publico'], $request->user()->sedeRestringida())
+        return Grupo::compatibles($config['publico'], $request->user()->sedeRestringida())->activos($incluir)
             ->with('sede')->withCount('contactos')->orderBy('nombre')->get();
     }
 
@@ -297,7 +360,7 @@ class EventoController extends Controller implements HasMiddleware
             'config' => $this->config($segmento),
             'evento' => $evento,
             'sedes' => $this->sedesPermitidas($request),
-            'grupos' => $this->gruposPermitidos($request, $this->config($segmento)),
+            'grupos' => $this->gruposPermitidos($request, $this->config($segmento), $evento->grupos->pluck('id')),
         ];
     }
 

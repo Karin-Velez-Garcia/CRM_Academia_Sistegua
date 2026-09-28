@@ -5,7 +5,7 @@
     $segmentos = [\App\Models\Contacto::segmentoDe($grupo->tipo)];
 @endphp
 
-@section('title', $grupo->nombre)
+@section('title', $grupo->nombre.($grupo->activo ? '' : ' (inactivo)'))
 @section('breadcrumb')
     <li class="breadcrumb-item text-muted"><a href="{{ route('grupos.index') }}" class="text-muted text-hover-primary">Grupos</a></li>
 @endsection
@@ -15,10 +15,14 @@
         <a href="{{ route('grupos.edit', $grupo) }}" class="btn btn-sm btn-light">
             <i class="ki-outline ki-pencil fs-2"></i> Editar
         </a>
-        <form method="POST" action="{{ route('grupos.destroy', $grupo) }}"
-              data-confirmar="¿Eliminar el grupo {{ $grupo->nombre }}? Los contactos no se eliminan.">
-            @csrf @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-light-danger"><i class="ki-outline ki-trash fs-2"></i> Eliminar</button>
+        <form method="POST" action="{{ route('grupos.estado', $grupo) }}"
+              data-confirmar="{{ $grupo->activo ? "¿Desactivar el grupo {$grupo->nombre}? Conserva sus miembros, pero ya no se podrá elegir en nuevas capacitaciones." : "¿Activar el grupo {$grupo->nombre}?" }}">
+            @csrf @method('PATCH')
+            @if ($grupo->activo)
+                <button type="submit" class="btn btn-sm btn-light-warning"><i class="ki-outline ki-lock fs-2"></i> Desactivar</button>
+            @else
+                <button type="submit" class="btn btn-sm btn-light-success"><i class="ki-outline ki-lock-2 fs-2"></i> Activar</button>
+            @endif
         </form>
     @endif
 @endsection

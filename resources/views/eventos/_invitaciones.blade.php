@@ -44,7 +44,7 @@
 
         @if (! $evento->acepta_respuestas && $resumen['invitados'] === 0)
             <div class="text-muted">
-                {{ $evento->cancelado_at ? 'La actividad está cancelada.' : 'La actividad ya se realizó.' }} No se enviaron invitaciones.
+                {{ $evento->cancelado_at ? 'La actividad está anulada.' : 'La actividad ya se realizó.' }} No se enviaron invitaciones.
             </div>
         @elseif ($resumen['invitados'] === 0)
             <div class="text-center py-8">

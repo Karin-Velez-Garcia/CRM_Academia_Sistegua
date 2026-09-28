@@ -169,17 +169,14 @@
             </label>
         </div>
     </div>
-    @if ($evento->exists && $evento->invitaciones()->where('estado_envio', 'enviada')->exists())
+    @if ($evento->exists && $evento->tieneInvitacionesEnviadas())
         <div class="px-lg-10 px-6 pb-6">
-            <div class="bg-light-primary rounded p-5">
-                <input type="hidden" name="avisar_cambio" value="0">
-                <label class="form-check form-check-custom form-check-solid">
-                    <input class="form-check-input" type="checkbox" name="avisar_cambio" value="1" @checked(old('avisar_cambio', true))>
-                    <span class="form-check-label fw-semibold text-gray-800">
-                        Si cambio la fecha, la hora o el lugar, avisar por correo a los invitados
-                        <span class="d-block text-muted fs-7 fw-normal">No se avisa a quienes ya dijeron que no asistirán. Si solo corrige el título o la descripción, no se envía nada.</span>
-                    </span>
-                </label>
+            <div class="bg-light-primary rounded p-5 d-flex gap-3">
+                <i class="ki-outline ki-sms fs-2 text-primary"></i>
+                <div class="fw-semibold text-gray-800">
+                    Ya se enviaron invitaciones: si cambia la fecha, la hora o el lugar, se avisará por correo a los invitados.
+                    <span class="d-block text-muted fs-7 fw-normal">No se avisa a quienes ya dijeron que no asistirán. Si solo corrige el título o la descripción, no se envía nada.</span>
+                </div>
             </div>
         </div>
     @endif

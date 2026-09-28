@@ -20,13 +20,13 @@ class PlantillaController extends Controller implements HasMiddleware
             new Middleware('permission:campanias.ver', only: ['index']),
             new Middleware('permission:campanias.crear', only: ['create', 'store']),
             new Middleware('permission:campanias.editar', only: ['edit', 'update']),
-            new Middleware('permission:campanias.eliminar', only: ['destroy']),
+            new Middleware('permission:campanias.desactivar', only: ['estado']),
         ];
     }
 
     public function index(): View
     {
-        return view('plantillas.index', ['plantillas' => Plantilla::orderBy('tipo_evento')->orderByDesc('predeterminada')->orderBy('nombre')->get()]);
+        return view('plantillas.index', ['plantillas' => Plantilla::orderBy('tipo_evento')->orderByDesc('activa')->orderByDesc('predeterminada')->orderBy('nombre')->get()]);
     }
 
     public function create(Request $request): View
@@ -53,16 +53,18 @@ class PlantillaController extends Controller implements HasMiddleware
         return redirect()->route('plantillas.index')->with('success', "Se actualizó la plantilla {$plantilla->nombre}.");
     }
 
-    public function destroy(Plantilla $plantilla): RedirectResponse
+    /** Las plantillas no se eliminan: las inactivas ya no se ofrecen al enviar invitaciones. */
+    public function estado(Plantilla $plantilla): RedirectResponse
     {
-        if (Plantilla::where('tipo_evento', $plantilla->tipo_evento)->count() === 1) {
-            return back()->with('error', 'Debe quedar al menos una plantilla para cada tipo de evento.');
+        if ($plantilla->activa && $plantilla->predeterminada) {
+            return back()->with('error', "No se puede desactivar la plantilla predeterminada. Marque otra como predeterminada primero.");
         }
 
-        $nombre = $plantilla->nombre;
-        $plantilla->delete();
+        $plantilla->update(['activa' => ! $plantilla->activa]);
 
-        return redirect()->route('plantillas.index')->with('success', "Se eliminó la plantilla {$nombre}.");
+        return back()->with('success', $plantilla->activa
+            ? "Se activó la plantilla {$plantilla->nombre}."
+            : "Se desactivó la plantilla {$plantilla->nombre}.");
     }
 
     private function guardar(Plantilla $plantilla, Request $request): Plantilla
@@ -76,8 +78,9 @@ class PlantillaController extends Controller implements HasMiddleware
         ], [], ['tipo_evento' => 'tipo de evento']);
         $datos['predeterminada'] = $request->boolean('predeterminada');
 
-        // Solo una predeterminada por tipo de evento
+        // Solo una predeterminada por tipo de evento, y siempre activa
         if ($datos['predeterminada']) {
+            $datos['activa'] = true;
             Plantilla::where('tipo_evento', $datos['tipo_evento'])->whereKeyNot($plantilla->id)->update(['predeterminada' => false]);
         }
 

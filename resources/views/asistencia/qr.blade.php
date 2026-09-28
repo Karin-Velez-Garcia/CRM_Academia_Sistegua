@@ -54,7 +54,7 @@
                         @if ($evento->registro_abierto)
                             <span class="badge badge-light-success">Abierto ahora</span>
                         @elseif ($evento->cancelado_at)
-                            <span class="badge badge-light-danger">Evento cancelado</span>
+                            <span class="badge badge-light-danger">Evento anulado</span>
                         @elseif ($evento->inicio->isFuture())
                             <span class="badge badge-light-warning">Abre el {{ $evento->inicio->copy()->subMinutes(\App\Models\Evento::REGISTRO_ANTES)->translatedFormat('j \d\e F \a \l\a\s H:i') }}</span>
                         @else

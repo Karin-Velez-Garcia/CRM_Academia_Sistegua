@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\ConfiguracionCorreo;
 use App\Models\User;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
@@ -26,5 +27,9 @@ class AppServiceProvider extends ServiceProvider
 
         // El rol Administrador tiene todos los permisos, incluidos los que se agreguen después.
         Gate::before(fn (User $user) => $user->hasRole(User::ROL_ADMINISTRADOR) ? true : null);
+
+        // Datos de envío guardados en Administración → Correo (reemplazan a los MAIL_* del .env).
+        // Solo se consultan cuando la petición va a enviar un correo.
+        $this->app->afterResolving('mail.manager', fn () => ConfiguracionCorreo::aplicarGuardada());
     }
 }

@@ -49,7 +49,7 @@
     </div>
 
     @if ($evento->cancelado_at)
-        <div class="alert bg-light-danger border border-danger border-dashed p-5 mb-6 fw-semibold text-gray-800">La actividad está cancelada; no se toma asistencia.</div>
+        <div class="alert bg-light-danger border border-danger border-dashed p-5 mb-6 fw-semibold text-gray-800">La actividad está anulada; no se toma asistencia.</div>
     @elseif (! $puedeMarcar)
         <div class="alert bg-light-primary border border-primary border-dashed d-flex align-items-center p-5 mb-6">
             <i class="ki-outline ki-information-5 fs-2x text-primary me-3"></i>

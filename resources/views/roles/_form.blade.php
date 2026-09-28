@@ -1,7 +1,7 @@
 @php
     $esAdmin = $rol->name === \App\Models\User::ROL_ADMINISTRADOR;
     $marcados = old('permisos', $asignados);
-    $nombresAcciones = ['ver' => 'Ver', 'crear' => 'Crear', 'editar' => 'Editar', 'eliminar' => 'Eliminar', 'importar' => 'Importar', 'enviar' => 'Enviar', 'exportar' => 'Exportar', 'asistencia' => 'Asistencia'];
+    $nombresAcciones = ['ver' => 'Ver', 'crear' => 'Crear', 'editar' => 'Editar', 'eliminar' => 'Eliminar', 'desactivar' => 'Desactivar', 'importar' => 'Importar', 'enviar' => 'Enviar', 'exportar' => 'Exportar', 'asistencia' => 'Asistencia'];
 @endphp
 <div class="card">
     <div class="card-body p-lg-10">

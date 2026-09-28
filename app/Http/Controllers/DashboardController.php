@@ -57,7 +57,7 @@ class DashboardController extends Controller
             'sedeId' => $sedeId,
             'sedes' => $restringida ? collect() : Sede::activas()->orderBy('nombre')->get(),
             'kpi' => [
-                'clientes' => Contacto::tipo(Contacto::CLIENTE)->tap($porSede)->count(),
+                'clientes' => Contacto::tipo(Contacto::CLIENTE)->activos()->tap($porSede)->count(),
                 'proximos_30' => Evento::proximos()->tap($porSede)->where('inicio', '<=', now()->addDays(30))->count(),
                 'realizados' => $realizados->count(),
                 'tasa_confirmacion' => self::tasa($totales['confirmadas'], $totales['enviadas']),
@@ -159,7 +159,7 @@ class DashboardController extends Controller
         }
 
         if ($u->can('contactos.ver')) {
-            $sinCorreo = Contacto::whereNull('correo')->tap($porSede)->count();
+            $sinCorreo = Contacto::activos()->whereNull('correo')->tap($porSede)->count();
             if ($sinCorreo > 0) {
                 $avisos[] = ['info', 'ki-sms', "{$sinCorreo} ".($sinCorreo === 1 ? 'contacto sin correo' : 'contactos sin correo'),
                     'No recibirán invitaciones.', route('contactos.index', ['padres', 'correo' => 'sin']), 'Revisar'];

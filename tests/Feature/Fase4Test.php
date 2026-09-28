@@ -68,6 +68,7 @@ class Fase4Test extends TestCase
         $maria = $this->padre();
         $this->padre(['correo' => null]);                         // sin correo: no se invita
         $this->padre(['acepta_correos' => false]);                // se dio de baja: no se invita
+        $this->padre(['activo' => false]);                        // desactivado: no se invita
 
         $this->enviar()->assertSessionHas('success', fn ($m) => str_contains($m, 'Se enviaron 1 invitaciones'));
 
@@ -206,7 +207,7 @@ class Fase4Test extends TestCase
         $this->actingAs($this->admin)->put(route('eventos.update', ['capacitaciones', $this->reunion]), [
             'titulo' => 'Instalación de tabla yeso', 'sede_id' => $this->guatemala->id, 'modalidad' => 'presencial', 'lugar' => 'Salón principal',
             'fecha' => $this->reunion->inicio->format('Y-m-d'), 'hora_inicio' => '16:00', 'hora_fin' => '18:00',
-            'para_todos' => '1', 'avisar_cambio' => '1',
+            'para_todos' => '1',
         ])->assertSessionHas('success', fn ($m) => str_contains($m, 'a 1 invitados'));
         Mail::assertSent(CorreoEvento::class, fn ($m) => $m->motivo === 'cambio');
 
@@ -214,15 +215,84 @@ class Fase4Test extends TestCase
         $this->actingAs($this->admin)->put(route('eventos.update', ['capacitaciones', $this->reunion]), [
             'titulo' => 'Instalación de tabla yeso (módulo 2)', 'sede_id' => $this->guatemala->id, 'modalidad' => 'presencial', 'lugar' => 'Salón principal',
             'fecha' => $this->reunion->inicio->format('Y-m-d'), 'hora_inicio' => '16:00', 'hora_fin' => '18:00',
-            'para_todos' => '1', 'avisar_cambio' => '1',
+            'para_todos' => '1',
         ]);
         $this->assertSame(1, Envio::where('motivo', 'cambio')->count());
 
-        $this->actingAs($this->admin)->patch(route('eventos.cancelar', ['capacitaciones', $this->reunion]), ['motivo' => 'Feriado', 'avisar' => '1'])
+        $this->actingAs($this->admin)->patch(route('eventos.cancelar', ['capacitaciones', $this->reunion]), ['motivo' => 'Feriado'])
             ->assertSessionHas('success', fn ($m) => str_contains($m, 'Se avisó por correo a 1'));
         Mail::assertSent(CorreoEvento::class, fn ($m) => $m->motivo === 'cancelacion'
             && str_contains($m->mensajeFinal, 'Motivo: Feriado')
             && ! str_contains($m->render(), 'Confirmo asistencia'));
+    }
+
+    public function test_con_invitaciones_enviadas_no_se_elimina_y_anular_siempre_avisa(): void
+    {
+        $this->padre();
+        $this->enviar();
+
+        $this->actingAs($this->admin)->get(route('eventos.show', ['capacitaciones', $this->reunion]))
+            ->assertOk()->assertSee('no se puede eliminar, solo anular o posponer')->assertSee('Posponer');
+        $this->actingAs($this->admin)->delete(route('eventos.destroy', ['capacitaciones', $this->reunion]))
+            ->assertSessionHas('error', fn ($m) => str_contains($m, 'No se puede eliminar'));
+        $this->assertModelExists($this->reunion);
+
+        // Aunque se intente desactivar el aviso, se envía igual
+        $this->actingAs($this->admin)->patch(route('eventos.cancelar', ['capacitaciones', $this->reunion]), ['avisar' => '0'])
+            ->assertSessionHas('success', fn ($m) => str_contains($m, 'anulada') && str_contains($m, 'a 1 invitados'));
+        Mail::assertSent(CorreoEvento::class, fn ($m) => $m->motivo === 'cancelacion');
+        $this->assertSame('cancelado', $this->reunion->fresh()->estado);
+    }
+
+    public function test_sin_invitaciones_enviadas_se_puede_eliminar(): void
+    {
+        $this->padre();
+
+        $this->actingAs($this->admin)->delete(route('eventos.destroy', ['capacitaciones', $this->reunion]))
+            ->assertRedirect(route('eventos.index', 'capacitaciones'));
+        $this->assertModelMissing($this->reunion);
+    }
+
+    public function test_posponer_cambia_la_fecha_y_avisa_la_nueva(): void
+    {
+        $this->padre();
+        $this->enviar();
+        $anterior = $this->reunion->inicio->copy();
+        $nueva = now()->addWeeks(3)->format('Y-m-d');
+        $this->reunion->forceFill(['recordatorio_enviado_at' => now()])->save();
+
+        $this->actingAs($this->admin)->patch(route('eventos.posponer', ['capacitaciones', $this->reunion]), [
+            'fecha' => $nueva, 'hora_inicio' => '09:00', 'hora_fin' => '11:00', 'motivo' => 'Feriado nacional',
+        ])->assertSessionHas('success', fn ($m) => str_contains($m, 'pospuesta') && str_contains($m, 'a 1 invitados'));
+
+        $evento = $this->reunion->fresh();
+        $this->assertSame("{$nueva} 09:00", $evento->inicio->format('Y-m-d H:i'));
+        $this->assertSame('11:00', $evento->fin->format('H:i'));
+        $this->assertNull($evento->recordatorio_enviado_at);
+        $this->assertSame(1, Envio::where('motivo', 'posposicion')->count());
+        Mail::assertSent(CorreoEvento::class, fn ($m) => $m->motivo === 'posposicion'
+            && str_contains($m->mensajeFinal, 'fue pospuesta')
+            && str_contains($m->mensajeFinal, 'Fecha anterior: '.$anterior->translatedFormat('l j \d\e F'))
+            && str_contains($m->mensajeFinal, 'Motivo: Feriado nacional')
+            && str_contains($m->render(), 'Confirmo asistencia'));
+    }
+
+    public function test_posponer_valida_la_nueva_fecha(): void
+    {
+        $ruta = route('eventos.posponer', ['capacitaciones', $this->reunion]);
+
+        $this->actingAs($this->admin)->patch($ruta, ['fecha' => now()->subDay()->format('Y-m-d'), 'hora_inicio' => '09:00', 'hora_fin' => '10:00'])
+            ->assertSessionHasErrorsIn('posponer', 'fecha');
+        $this->actingAs($this->admin)->patch($ruta, ['fecha' => now()->addWeek()->format('Y-m-d'), 'hora_inicio' => '10:00', 'hora_fin' => '09:00'])
+            ->assertSessionHasErrorsIn('posponer', 'hora_fin');
+        $this->actingAs($this->admin)->patch($ruta, [
+            'fecha' => $this->reunion->inicio->format('Y-m-d'), 'hora_inicio' => $this->reunion->inicio->format('H:i'), 'hora_fin' => $this->reunion->fin->format('H:i'),
+        ])->assertSessionHasErrorsIn('posponer', 'fecha');
+
+        // Una anulada no se pospone
+        $this->reunion->forceFill(['cancelado_at' => now()])->save();
+        $this->actingAs($this->admin)->patch($ruta, ['fecha' => now()->addWeek()->format('Y-m-d'), 'hora_inicio' => '09:00', 'hora_fin' => '10:00'])
+            ->assertNotFound();
     }
 
     public function test_respuesta_manual_y_reenvio(): void
@@ -276,17 +346,24 @@ class Fase4Test extends TestCase
         $this->actingAs($this->admin)->get(route('invitaciones.vista-previa', ['capacitaciones', $this->reunion, 'mensaje' => 'Hola {nombre}']))
             ->assertOk()->assertSee('Hola Rosa Morales')->assertSee('Confirmo asistencia');
 
-        // Plantillas: solo una predeterminada por tipo; no se puede borrar la última
+        // Plantillas: solo una predeterminada por tipo; la predeterminada no se puede desactivar
         $this->actingAs($this->admin)->post(route('plantillas.store'), [
             'nombre' => 'Otra', 'tipo_evento' => 'capacitacion', 'asunto' => 'A', 'mensaje' => 'M', 'predeterminada' => '1',
         ])->assertRedirect(route('plantillas.index'));
         $this->assertSame(1, Plantilla::where('tipo_evento', 'capacitacion')->where('predeterminada', true)->count());
         $this->assertSame('Otra', Plantilla::predeterminadaPara('capacitacion')->nombre);
 
-        // No se puede borrar la última plantilla que queda del tipo
-        Plantilla::where('nombre', '!=', 'Otra')->delete();
-        $unica = Plantilla::where('tipo_evento', 'capacitacion')->sole();
-        $this->actingAs($this->admin)->delete(route('plantillas.destroy', $unica))->assertSessionHas('error');
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('plantillas.destroy'));
+        $otra = Plantilla::where('nombre', 'Otra')->sole();
+        $this->actingAs($this->admin)->patch(route('plantillas.estado', $otra))->assertSessionHas('error');
+        $this->assertTrue($otra->fresh()->activa);
+
+        // Una no predeterminada se desactiva y ya no se ofrece en el evento
+        $vieja = Plantilla::where('nombre', '!=', 'Otra')->first();
+        $this->actingAs($this->admin)->patch(route('plantillas.estado', $vieja))->assertSessionHas('success');
+        $this->assertFalse($vieja->fresh()->activa);
+        $this->actingAs($this->admin)->get(route('dashboard')); // consume el mensaje de confirmación
+        $this->actingAs($this->admin)->get(route('eventos.show', ['capacitaciones', $this->reunion]))->assertOk()->assertDontSee($vieja->nombre);
 
         // Director de otra sede no ve ni envía
         $director = User::factory()->create(['sede_id' => Sede::where('nombre', 'Chiquimula')->value('id')]);

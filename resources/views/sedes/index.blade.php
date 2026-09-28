@@ -64,10 +64,11 @@
                         @can('sedes.editar')
                             <a href="{{ route('sedes.edit', $sede) }}" class="btn btn-sm btn-light btn-active-light-primary">Editar</a>
                         @endcan
-                        @can('sedes.eliminar')
-                            <form method="POST" action="{{ route('sedes.destroy', $sede) }}" data-confirmar="¿Eliminar la sede {{ $sede->nombre }}?">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-light btn-active-light-danger">Eliminar</button>
+                        @can('sedes.desactivar')
+                            <form method="POST" action="{{ route('sedes.estado', $sede) }}"
+                                  data-confirmar="{{ $sede->activa ? "¿Desactivar la sede {$sede->nombre}? Ya no se podrá elegir al registrar clientes ni capacitaciones; sus datos se conservan." : "¿Activar la sede {$sede->nombre}?" }}">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="btn btn-sm btn-light {{ $sede->activa ? 'btn-active-light-warning' : 'btn-active-light-success' }}">{{ $sede->activa ? 'Desactivar' : 'Activar' }}</button>
                             </form>
                         @endcan
                     </div>

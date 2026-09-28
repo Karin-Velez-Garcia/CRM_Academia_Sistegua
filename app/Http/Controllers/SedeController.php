@@ -20,7 +20,7 @@ class SedeController extends Controller implements HasMiddleware
             new Middleware('permission:sedes.ver', only: ['index']),
             new Middleware('permission:sedes.crear', only: ['create', 'store']),
             new Middleware('permission:sedes.editar', only: ['edit', 'update']),
-            new Middleware('permission:sedes.eliminar', only: ['destroy']),
+            new Middleware('permission:sedes.desactivar', only: ['estado']),
         ];
     }
 
@@ -63,16 +63,12 @@ class SedeController extends Controller implements HasMiddleware
         return redirect()->route('sedes.index')->with('success', "Se actualizó la sede {$sede->nombre}.");
     }
 
-    public function destroy(Sede $sede): RedirectResponse
+    /** Las sedes no se eliminan: se desactivan y dejan de aparecer al registrar clientes y capacitaciones. */
+    public function estado(Sede $sede): RedirectResponse
     {
-        if ($sede->contactos()->exists() || $sede->usuarios()->exists()) {
-            return back()->with('error', "No se puede eliminar la sede {$sede->nombre} porque tiene contactos o usuarios. Puede desactivarla.");
-        }
+        $sede->update(['activa' => ! $sede->activa]);
 
-        $nombre = $sede->nombre;
-        $sede->delete();
-
-        return redirect()->route('sedes.index')->with('success', "Se eliminó la sede {$nombre}.");
+        return back()->with('success', $sede->activa ? "Se activó la sede {$sede->nombre}." : "Se desactivó la sede {$sede->nombre}.");
     }
 
     private function validar(Request $request, ?Sede $sede = null): array
@@ -83,12 +79,9 @@ class SedeController extends Controller implements HasMiddleware
             'direccion' => ['required', 'string', 'max:200'],
             'telefono' => ['nullable', 'regex:/^[0-9]{4}-?[0-9]{4}$/'],
             'correo' => ['nullable', 'email', 'max:150'],
-            'activa' => ['boolean'],
         ], [
             'telefono.regex' => 'El teléfono debe tener 8 dígitos (por ejemplo 7945-1234).',
         ], ['municipio_id' => 'municipio']);
-        $datos['activa'] = $request->boolean('activa');
-
         return $datos;
     }
 }

@@ -12,7 +12,7 @@
             <i class="ki-outline ki-file-up fs-2"></i> Cargar desde Excel
         </a>
     @endcan
-    <a href="{{ route('contactos.exportar', [$segmento] + request()->only(['buscar', 'sede', 'grupo', 'correo'])) }}" class="btn btn-sm btn-light">
+    <a href="{{ route('contactos.exportar', [$segmento] + request()->only(['buscar', 'sede', 'grupo', 'correo', 'estado'])) }}" class="btn btn-sm btn-light">
         <i class="ki-outline ki-file-down fs-2"></i> Exportar
     </a>
     @can('contactos.crear')
@@ -60,8 +60,13 @@
                     <option value="con" @selected(request('correo') === 'con')>Con correo</option>
                     <option value="sin" @selected(request('correo') === 'sin')>Sin correo</option>
                 </select>
+                <select name="estado" class="form-select form-select-solid w-auto">
+                    <option value="activos">Activos</option>
+                    <option value="inactivos" @selected(request('estado') === 'inactivos')>Inactivos</option>
+                    <option value="todos" @selected(request('estado') === 'todos')>Activos e inactivos</option>
+                </select>
                 <button type="submit" class="btn btn-light-primary">Filtrar</button>
-                @if (request()->hasAny(['buscar', 'sede', 'grupo', 'correo']))
+                @if (request()->hasAny(['buscar', 'sede', 'grupo', 'correo', 'estado']))
                     <a href="{{ route('contactos.index', $segmento) }}" class="btn btn-light">Limpiar</a>
                 @endif
             </form>
@@ -76,7 +81,10 @@
                     <select name="accion" class="form-select form-select-sm w-auto" data-accion-masiva>
                         <option value="agregar_grupo">Agregar a un grupo</option>
                         <option value="quitar_grupo">Quitar de un grupo</option>
-                        @can('contactos.eliminar')<option value="eliminar">Eliminar</option>@endcan
+                        @can('contactos.desactivar')
+                            <option value="desactivar">Desactivar</option>
+                            <option value="activar">Activar</option>
+                        @endcan
                     </select>
                     <select name="grupo_id" class="form-select form-select-sm w-auto mw-250px" data-grupo-masivo>
                         <option value="">Seleccione el grupo</option>
@@ -110,7 +118,7 @@
                     </thead>
                     <tbody class="text-gray-600 fw-semibold">
                     @forelse ($contactos as $c)
-                        <tr>
+                        <tr class="{{ $c->activo ? '' : 'opacity-75' }}">
                             @can('contactos.editar')
                                 <td>
                                     <div class="form-check form-check-sm form-check-custom form-check-solid">
@@ -125,7 +133,9 @@
                                         <span class="symbol-label bg-light-primary text-primary fw-bold">{{ $c->iniciales }}</span>
                                     </div>
                                     <div class="d-flex flex-column">
-                                        <span class="text-gray-800 fw-bold">{{ $c->nombre_completo }}</span>
+                                        <span class="text-gray-800 fw-bold">{{ $c->nombre_completo }}
+                                            @unless ($c->activo)<span class="badge badge-light-danger ms-1">Inactivo</span>@endunless
+                                        </span>
                                         @if ($c->correo)
                                             <span class="fs-7">{{ $c->correo }}
                                                 @unless ($c->acepta_correos)<span class="badge badge-light-danger ms-1" title="No desea recibir correos">No recibe correos</span>@endunless
@@ -159,12 +169,12 @@
                                         <i class="ki-outline ki-pencil fs-3"></i>
                                     </a>
                                 @endcan
-                                @can('contactos.eliminar')
-                                    <form method="POST" action="{{ route('contactos.destroy', [$segmento, $c]) }}" class="d-inline"
-                                          data-confirmar="¿Eliminar a {{ $c->nombre_completo }}?">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-bs-toggle="tooltip" title="Eliminar">
-                                            <i class="ki-outline ki-trash fs-3"></i>
+                                @can('contactos.desactivar')
+                                    <form method="POST" action="{{ route('contactos.estado', [$segmento, $c]) }}" class="d-inline"
+                                          data-confirmar="{{ $c->activo ? "¿Desactivar a {$c->nombre_completo}? Ya no recibirá invitaciones; su historial se conserva." : "¿Activar a {$c->nombre_completo}?" }}">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="btn btn-icon btn-bg-light btn-active-color-warning btn-sm" data-bs-toggle="tooltip" title="{{ $c->activo ? 'Desactivar' : 'Activar' }}">
+                                            <i class="ki-outline {{ $c->activo ? 'ki-lock' : 'ki-lock-2' }} fs-3"></i>
                                         </button>
                                     </form>
                                 @endcan
@@ -214,10 +224,11 @@
                 casillas.forEach(function (c) { c.checked = todos.checked; });
                 actualizar();
             });
-            accion.addEventListener('change', function () { grupo.classList.toggle('d-none', accion.value === 'eliminar'); });
+            function usaGrupo() { return accion.value === 'agregar_grupo' || accion.value === 'quitar_grupo'; }
+            accion.addEventListener('change', function () { grupo.classList.toggle('d-none', !usaGrupo()); });
             barra.addEventListener('submit', function (ev) {
-                if (accion.value === 'eliminar') {
-                    barra.dataset.confirmar = '¿Eliminar los ' + contador.textContent + ' contactos seleccionados? Esta acción no se puede deshacer.';
+                if (accion.value === 'desactivar') {
+                    barra.dataset.confirmar = '¿Desactivar los ' + contador.textContent + ' contactos seleccionados? Ya no recibirán invitaciones; su historial se conserva.';
                 } else {
                     delete barra.dataset.confirmar;
                 }

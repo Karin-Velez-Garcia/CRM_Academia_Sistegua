@@ -12,9 +12,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Catálogo de Guatemala, roles/permisos y plantillas iniciales de correo y certificado.
         $this->call([
             GeografiaSeeder::class,
-            SedesSeeder::class,
             RolesPermisosSeeder::class,
             PlantillasSeeder::class,
             CertificadosSeeder::class,
@@ -31,12 +31,5 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $admin->assignRole(User::ROL_ADMINISTRADOR);
-
-        // Datos de demostración: clientes, grupos, capacitaciones e invitaciones con asistencia.
-        $this->call([
-            ClientesSeeder::class,
-            GruposDemoSeeder::class,
-            EventosDemoSeeder::class,
-        ]);
     }
 }

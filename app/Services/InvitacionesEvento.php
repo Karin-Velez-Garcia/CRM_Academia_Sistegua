@@ -27,6 +27,10 @@ class InvitacionesEvento
             'asunto' => 'Cambio en: {titulo}',
             'mensaje' => "Estimado(a) {nombre}:\n\nLe informamos que la actividad \"{titulo}\" tuvo cambios. Los datos actualizados son: {fecha}, de {hora}, en {lugar}.\n\nSi su disponibilidad cambió, puede actualizar su respuesta con los botones de este correo.",
         ],
+        'posposicion' => [
+            'asunto' => 'Nueva fecha: {titulo} — {fecha}',
+            'mensaje' => "Estimado(a) {nombre}:\n\nLe informamos que la actividad \"{titulo}\" fue pospuesta. La nueva fecha es el {fecha}, de {hora}, en {lugar}.\n\nSi con la nueva fecha su disponibilidad cambió, por favor actualice su respuesta con los botones de este correo.",
+        ],
         'cancelacion' => [
             'asunto' => 'Cancelada: {titulo}',
             'mensaje' => "Estimado(a) {nombre}:\n\nLe informamos que la actividad \"{titulo}\" programada para el {fecha} fue cancelada.\n\nDisculpe los inconvenientes.",
@@ -140,10 +144,14 @@ class InvitacionesEvento
         return [$grupos['confirmados']->count(), $grupos['sin_respuesta']->count()];
     }
 
-    public function avisar(string $motivo, ?User $usuario, ?string $asunto = null, ?string $mensaje = null): int
+    /** $nota se agrega al final del mensaje (por ejemplo, la fecha anterior y el motivo de una posposición). */
+    public function avisar(string $motivo, ?User $usuario, ?string $asunto = null, ?string $mensaje = null, ?string $nota = null): int
     {
         $texto = self::TEXTOS[$motivo];
         $mensaje ??= $texto['mensaje'];
+        if ($nota) {
+            $mensaje .= "\n\n{$nota}";
+        }
         if ($motivo === 'cancelacion' && $this->evento->motivo_cancelacion) {
             $mensaje .= "\n\nMotivo: {$this->evento->motivo_cancelacion}";
         }

@@ -34,7 +34,7 @@
                                     <td class="text-nowrap">{{ $inv->evento->inicio->format('d/m/Y') }}</td>
                                     <td>
                                         <a href="{{ route('eventos.show', [\App\Models\Evento::segmentoDe($inv->evento->tipo), $inv->evento]) }}" class="text-gray-900 text-hover-primary">{{ $inv->evento->titulo }}</a>
-                                        @if ($inv->evento->cancelado_at)<span class="badge badge-light-danger ms-1">Cancelado</span>@endif
+                                        @if ($inv->evento->cancelado_at)<span class="badge badge-light-danger ms-1">Anulado</span>@endif
                                     </td>
                                     <td>
                                         @if ($inv->respuesta === 'confirmada')<span class="badge badge-light-success">Confirmó</span>

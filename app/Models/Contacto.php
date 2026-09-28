@@ -30,14 +30,14 @@ class Contacto extends Model
 
     protected $fillable = [
         'tipo', 'sede_id', 'nombres', 'apellidos', 'dpi', 'correo', 'telefono',
-        'empresa', 'oficio', 'acepta_correos',
+        'empresa', 'oficio', 'acepta_correos', 'activo',
     ];
 
-    protected $attributes = ['tipo' => self::CLIENTE, 'acepta_correos' => true];
+    protected $attributes = ['tipo' => self::CLIENTE, 'acepta_correos' => true, 'activo' => true];
 
     protected function casts(): array
     {
-        return ['acepta_correos' => 'boolean'];
+        return ['acepta_correos' => 'boolean', 'activo' => 'boolean'];
     }
 
     protected static function booted(): void
@@ -78,6 +78,12 @@ class Contacto extends Model
     public function getInicialesAttribute(): string
     {
         return mb_strtoupper(mb_substr($this->nombres, 0, 1).mb_substr($this->apellidos, 0, 1));
+    }
+
+    /** Los desactivados conservan su historial, pero ya no reciben invitaciones ni aparecen en las listas. */
+    public function scopeActivos(Builder $query): Builder
+    {
+        return $query->where('contactos.activo', true);
     }
 
     public function scopeTipo(Builder $query, string $tipo): Builder

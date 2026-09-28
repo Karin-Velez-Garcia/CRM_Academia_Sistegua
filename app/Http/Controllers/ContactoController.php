@@ -28,7 +28,7 @@ class ContactoController extends Controller implements HasMiddleware
             new Middleware('permission:contactos.ver', only: ['index', 'exportar']),
             new Middleware('permission:contactos.crear', only: ['create', 'store']),
             new Middleware('permission:contactos.editar', only: ['edit', 'update', 'masivo']),
-            new Middleware('permission:contactos.eliminar', only: ['destroy']),
+            new Middleware('permission:contactos.desactivar', only: ['estado']),
             new Middleware('permission:contactos.importar', only: ['importarForm', 'importar', 'plantilla']),
         ];
     }
@@ -47,7 +47,7 @@ class ContactoController extends Controller implements HasMiddleware
             'contactos' => $contactos,
             'sedes' => $this->sedesPermitidas($request),
             'grupos' => $this->gruposPermitidos($request, $config['tipo']),
-            'totalSinCorreo' => $this->consultaBase($request, $config['tipo'])->whereNull('correo')->count(),
+            'totalSinCorreo' => $this->consultaBase($request, $config['tipo'])->activos()->whereNull('correo')->count(),
         ]);
     }
 
@@ -87,7 +87,7 @@ class ContactoController extends Controller implements HasMiddleware
             'config' => $config,
             'contacto' => $contacto->load('grupos'),
             'sedes' => $this->sedesPermitidas($request),
-            'grupos' => $this->gruposPermitidos($request, $config['tipo']),
+            'grupos' => $this->gruposPermitidos($request, $config['tipo'], $contacto->grupos->pluck('id')),
             // Historial de participación en reuniones y capacitaciones
             'historial' => $contacto->invitaciones()->with('evento')
                 ->join('eventos', 'eventos.id', '=', 'invitaciones.evento_id')
@@ -107,40 +107,43 @@ class ContactoController extends Controller implements HasMiddleware
         return redirect()->route('contactos.index', $tipo)->with('success', "Se actualizaron los datos de {$contacto->nombre_completo}.");
     }
 
-    public function destroy(Request $request, string $tipo, Contacto $contacto): RedirectResponse
+    /** Los clientes no se eliminan: los inactivos conservan su historial, pero ya no reciben invitaciones. */
+    public function estado(Request $request, string $tipo, Contacto $contacto): RedirectResponse
     {
         $config = $this->config($tipo);
         $this->autorizarContacto($request, $contacto, $config['tipo']);
 
-        $nombre = $contacto->nombre_completo;
-        $contacto->delete();
+        $contacto->update(['activo' => ! $contacto->activo]);
 
-        return redirect()->route('contactos.index', $tipo)->with('success', "Se eliminó a {$nombre}.");
+        return back()->with('success', $contacto->activo
+            ? "Se activó a {$contacto->nombre_completo}."
+            : "Se desactivó a {$contacto->nombre_completo}. Ya no recibirá invitaciones.");
     }
 
     /**
-     * Acciones sobre varios contactos seleccionados: agregar o quitar de un grupo, eliminar.
+     * Acciones sobre varios contactos seleccionados: agregar o quitar de un grupo, desactivar o activar.
      */
     public function masivo(Request $request, string $tipo): RedirectResponse
     {
         $config = $this->config($tipo);
         $datos = $request->validate([
-            'accion' => ['required', Rule::in(['agregar_grupo', 'quitar_grupo', 'eliminar'])],
+            'accion' => ['required', Rule::in(['agregar_grupo', 'quitar_grupo', 'desactivar', 'activar'])],
             'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['integer'],
-            'grupo_id' => ['required_unless:accion,eliminar', 'nullable', 'integer'],
+            'grupo_id' => ['required_if:accion,agregar_grupo,quitar_grupo', 'nullable', 'integer'],
         ], [
             'ids.required' => 'Seleccione al menos un contacto.',
-            'grupo_id.required_unless' => 'Seleccione el grupo.',
+            'grupo_id.required_if' => 'Seleccione el grupo.',
         ]);
 
         $contactos = $this->consultaBase($request, $config['tipo'])->whereIn('id', $datos['ids'])->get();
 
-        if ($datos['accion'] === 'eliminar') {
-            abort_unless($request->user()->can('contactos.eliminar'), 403);
-            Contacto::whereIn('id', $contactos->pluck('id'))->delete();
+        if (in_array($datos['accion'], ['desactivar', 'activar'], true)) {
+            abort_unless($request->user()->can('contactos.desactivar'), 403);
+            $activo = $datos['accion'] === 'activar';
+            Contacto::whereIn('id', $contactos->pluck('id'))->update(['activo' => $activo]);
 
-            return back()->with('success', "Se eliminaron {$contactos->count()} contactos.");
+            return back()->with('success', "Se ".($activo ? 'activaron' : 'desactivaron')." {$contactos->count()} contactos.");
         }
 
         $grupo = $this->gruposPermitidos($request, $config['tipo'])->firstWhere('id', (int) $datos['grupo_id']);
@@ -240,6 +243,7 @@ class ContactoController extends Controller implements HasMiddleware
     {
         return $this->consultaBase($request, $tipo)
             ->buscar($request->input('buscar'))
+            ->when($request->input('estado', 'activos') !== 'todos', fn ($q) => $q->where('activo', $request->input('estado', 'activos') === 'activos'))
             ->when($request->filled('sede'), fn ($q) => $q->where('sede_id', $request->integer('sede')))
             ->when($request->filled('grupo'), fn ($q) => $q->whereHas('grupos', fn ($g) => $g->whereKey($request->integer('grupo'))))
             ->when($request->input('correo') === 'con', fn ($q) => $q->whereNotNull('correo'))
@@ -253,9 +257,10 @@ class ContactoController extends Controller implements HasMiddleware
             ->orderBy('nombre')->get();
     }
 
-    private function gruposPermitidos(Request $request, string $tipo)
+    /** Grupos activos que se pueden elegir; $incluir agrega los inactivos a los que ya pertenece el contacto. */
+    private function gruposPermitidos(Request $request, string $tipo, iterable $incluir = [])
     {
-        return Grupo::compatibles($tipo, $request->user()->sedeRestringida())
+        return Grupo::compatibles($tipo, $request->user()->sedeRestringida())->activos($incluir)
             ->with('sede')->orderBy('nombre')->get();
     }
 

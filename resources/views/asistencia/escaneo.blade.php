@@ -8,7 +8,7 @@
         'ya_estaba' => ['ki-information-5', 'primary', 'Ya estaba registrado(a)', 'Su asistencia se había registrado a las '.$invitacion->asistencia_at?->format('H:i').'.'],
         'antes' => ['ki-time', 'warning', 'Todavía no se puede registrar', 'El registro abre '.\App\Models\Evento::REGISTRO_ANTES.' minutos antes del inicio ('.$evento->inicio->translatedFormat('j \d\e F, H:i').').'],
         'terminado' => ['ki-cross-circle', 'danger', 'El registro ya cerró', 'La actividad terminó.'],
-        'cancelado' => ['ki-cross-circle', 'danger', 'Actividad cancelada', null],
+        'cancelado' => ['ki-cross-circle', 'danger', 'Actividad anulada', null],
     };
 @endphp
 

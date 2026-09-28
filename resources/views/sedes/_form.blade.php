@@ -2,18 +2,11 @@
 <div class="card">
     <div class="card-body p-lg-10">
         <div class="row g-6">
-            <div class="col-md-6">
+            <div class="col-12">
                 <label for="nombre" class="required form-label fw-semibold">Nombre de la sede</label>
                 <input id="nombre" name="nombre" value="{{ old('nombre', $sede->nombre) }}" required maxlength="80" placeholder="Por ejemplo: Sanarate"
                        class="form-control form-control-solid @error('nombre') is-invalid @enderror">
                 @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-            <div class="col-md-6 d-flex align-items-end">
-                <input type="hidden" name="activa" value="0">
-                <label class="form-check form-switch form-check-custom form-check-solid mb-3">
-                    <input class="form-check-input" type="checkbox" name="activa" value="1" @checked(old('activa', $sede->activa ?? true))>
-                    <span class="form-check-label fw-semibold text-gray-700">Sede activa</span>
-                </label>
             </div>
             <div class="col-md-6">
                 <label for="departamento_id" class="required form-label fw-semibold">Departamento</label>

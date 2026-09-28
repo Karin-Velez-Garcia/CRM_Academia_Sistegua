@@ -52,13 +52,14 @@ Se conserva la arquitectura del sistema original, simplificada a un solo públic
 | Acceso | Usuarios, roles y permisos, catálogo de Guatemala (22 departamentos, 340 municipios INE) | ✅ |
 | Clientes | Sedes, directorio, grupos, carga y exportación Excel | ✅ |
 | Capacitaciones | Presenciales o virtuales, estados, duplicar, archivo `.ics` | ✅ |
-| Invitaciones | Correo, confirmación pública, recordatorios, plantillas | ✅ (correo en modo de prueba) |
+| Invitaciones | Correo, confirmación pública, recordatorios, plantillas | ✅ |
+| Correo de envío | Cuenta SMTP editable desde *Administración → Correo de envío* (contraseña cifrada), modo de prueba y correo de prueba | ✅ |
 | Asistencia | Lista manual, **QR del evento y QR personal**, listas PDF/Excel | ✅ |
 | Certificados | **Editor visual de diseños** + entrega en PDF, envío por correo y verificación pública | ✅ |
 | Reportes | Por capacitación y por persona, con exportación a Excel | ✅ |
 | Tablero | Indicadores, gráfica mensual y avisos de pendientes | ✅ |
 
-Pruebas automáticas: **78**, todas pasan.
+Pruebas automáticas: **84**, todas pasan.
 
 **Datos de demostración** (`php artisan migrate:fresh --seed`): 400 clientes con apellidos
 típicos de cada región, 13 grupos, 25 capacitaciones del último año con ~2,000 invitaciones
@@ -93,9 +94,9 @@ Es la función propia de este proyecto (el sistema anterior tenía el certificad
 
 - [ ] **Logos reales** de la empresa (hoy siguen los del proyecto anterior).
 - [ ] **Nombre y sucursales reales**: hoy "Academia Sistegua" con tres sedes de ejemplo.
-- [ ] **Correo real**: por ahora `MAIL_MAILER=log` (los correos quedan en
-      `storage/logs/correos.log`). Para activarlo, poner los datos SMTP en `.env`; con envíos
-      grandes, `QUEUE_CONNECTION=database` y `php artisan queue:work`.
+- [x] **Correo real**: Gmail `pruebas.sistemas.14@gmail.com`, configurado en *Administración → Correo de envío*
+      (tabla `configuracion_correo`; si está vacía se usan los `MAIL_*` del `.env`). Con envíos grandes,
+      `QUEUE_CONNECTION=database` y `php artisan queue:work` (tras cambiar el correo: `php artisan queue:restart`).
 - [ ] `APP_URL` debe ser la dirección pública para que funcionen los enlaces de los correos.
 - [ ] Publicar en un servidor con PHP 8.2 + MySQL.
 - [ ] Colores: se heredó la paleta azul marino + dorado; ajustar a la identidad de la empresa.
@@ -105,5 +106,11 @@ Es la función propia de este proyecto (el sistema anterior tenía el certificad
 - Todo el texto de la interfaz en español; validaciones en español (`lang/es`).
 - Rutas con segmento de tipo: `/contactos/clientes`, `/eventos/capacitaciones`.
 - Confirmaciones de acciones delicadas: `<form data-confirmar="…">`.
+- **Sedes, clientes, grupos, usuarios y plantillas de correo no se eliminan**: se desactivan
+  (`PATCH …/estado`, permiso `modulo.desactivar`). Lo inactivo conserva su historial, pero no recibe
+  invitaciones ni se ofrece en los formularios; los listados muestran por defecto solo lo activo.
+- **Capacitaciones con invitaciones enviadas no se eliminan** (`Evento::tieneInvitacionesEnviadas()`):
+  se **anulan** o se **posponen**, y en ambos casos se avisa siempre por correo (también al cambiar
+  fecha, hora o lugar desde Editar). En pantalla se dice "anulada"; en correos y páginas públicas, "cancelada".
 - JS propio mínimo en `public/assets/js/app.js`; CSS propio en `public/assets/css/app.css`.
 - Pruebas en `tests/Feature/`.

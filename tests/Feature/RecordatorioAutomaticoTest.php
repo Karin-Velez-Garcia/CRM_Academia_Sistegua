@@ -142,13 +142,15 @@ class RecordatorioAutomaticoTest extends TestCase
         $this->actingAs($admin)->put(route('eventos.update', ['capacitaciones', $this->evento]), [
             'titulo' => 'Instalación de tabla yeso', 'sede_id' => $this->sede->id, 'modalidad' => 'presencial', 'lugar' => 'Salón',
             'fecha' => '2026-10-15', 'hora_inicio' => '15:00', 'hora_fin' => '17:00', 'para_todos' => '1',
-            'recordatorio_automatico' => '1', 'avisar_cambio' => '0',
+            'recordatorio_automatico' => '1',
         ])->assertRedirect();
         $this->assertNull($this->evento->fresh()->recordatorio_enviado_at);
+        // Ya tenía la invitación: se le avisa siempre de la nueva fecha
+        Mail::assertSent(CorreoEvento::class, fn ($m) => $m->motivo === 'posposicion');
 
         $this->travelTo(Carbon::parse('2026-10-14 07:05'));
         $this->artisan('recordatorios:enviar');
-        Mail::assertSent(CorreoEvento::class, 2);
+        Mail::assertSent(CorreoEvento::class, 3);
     }
 
     public function test_la_ficha_muestra_cuando_sale(): void

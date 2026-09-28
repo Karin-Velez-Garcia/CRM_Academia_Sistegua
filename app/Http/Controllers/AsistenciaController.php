@@ -113,7 +113,7 @@ class AsistenciaController extends Controller implements HasMiddleware
         $this->autorizar($request, $tipo, $evento);
         $enLista = $this->lista($evento)->keys();
 
-        $resultados = Contacto::where('sede_id', $evento->sede_id)
+        $resultados = Contacto::activos()->where('sede_id', $evento->sede_id)
             ->buscar($request->input('q'))
             ->whereNotIn('id', $enLista)
             ->orderBy('apellidos')->limit(10)->get()

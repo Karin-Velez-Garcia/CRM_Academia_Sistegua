@@ -20,16 +20,18 @@ class Plantilla extends Model
         '{academia}' => 'Nombre de la academia',
     ];
 
-    protected $fillable = ['nombre', 'tipo_evento', 'asunto', 'mensaje', 'predeterminada'];
+    protected $fillable = ['nombre', 'tipo_evento', 'asunto', 'mensaje', 'predeterminada', 'activa'];
+
+    protected $attributes = ['activa' => true];
 
     protected function casts(): array
     {
-        return ['predeterminada' => 'boolean'];
+        return ['predeterminada' => 'boolean', 'activa' => 'boolean'];
     }
 
     public static function predeterminadaPara(string $tipoEvento): ?self
     {
-        return static::where('tipo_evento', $tipoEvento)->orderByDesc('predeterminada')->orderBy('id')->first();
+        return static::where('tipo_evento', $tipoEvento)->where('activa', true)->orderByDesc('predeterminada')->orderBy('id')->first();
     }
 
     /** Reemplaza las variables con los datos del evento y (si se indica) del invitado. */

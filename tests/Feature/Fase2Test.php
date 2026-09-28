@@ -68,7 +68,7 @@ class Fase2Test extends TestCase
         $this->assertSame('Chiquimula', $this->chiquimula->municipio->departamento->nombre);
     }
 
-    public function test_crud_de_sedes_y_proteccion_al_eliminar(): void
+    public function test_crud_de_sedes_y_desactivar(): void
     {
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
 
@@ -79,12 +79,18 @@ class Fase2Test extends TestCase
         ])->assertRedirect(route('sedes.index'));
         $this->assertDatabaseHas('sedes', ['nombre' => 'Mixco']);
 
-        $this->padre();
-        $this->actingAs($admin)->delete(route('sedes.destroy', $this->guatemala))->assertSessionHas('error');
-        $this->assertModelExists($this->guatemala);
+        // Las sedes no se eliminan: al desactivarla ya no se ofrece al registrar clientes
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('sedes.destroy'));
+        $this->actingAs($admin)->patch(route('sedes.estado', $this->xela))->assertSessionHas('success');
+        $this->assertFalse($this->xela->fresh()->activa);
+        $this->actingAs($admin)->post(route('contactos.store', 'clientes'), [
+            'nombres' => 'X', 'apellidos' => 'Y', 'sede_id' => $this->xela->id,
+        ])->assertSessionHasErrors('sede_id');
+        $this->actingAs($admin)->patch(route('sedes.estado', $this->xela));
+        $this->assertTrue($this->xela->fresh()->activa);
     }
 
-    public function test_crear_editar_y_eliminar_cliente(): void
+    public function test_crear_editar_y_desactivar_cliente(): void
     {
         $admin = $this->usuario(User::ROL_ADMINISTRADOR);
         $grupo = Grupo::create(['nombre' => 'Instaladores certificados', 'tipo' => Contacto::CLIENTE, 'sede_id' => $this->guatemala->id]);
@@ -113,8 +119,14 @@ class Fase2Test extends TestCase
         $this->assertCount(0, $maria->fresh()->grupos);
         $this->assertFalse($maria->fresh()->acepta_correos);
 
-        $this->actingAs($admin)->delete(route('contactos.destroy', ['clientes', $maria]))->assertRedirect();
-        $this->assertModelMissing($maria);
+        // Desactivado: se conserva, sale de la lista normal y aparece en el filtro de inactivos
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('contactos.destroy'));
+        $this->actingAs($admin)->patch(route('contactos.estado', ['clientes', $maria]))->assertSessionHas('success');
+        $this->assertModelExists($maria);
+        $this->assertFalse($maria->fresh()->activo);
+        $this->actingAs($admin)->get(route('dashboard')); // consume el mensaje de confirmación
+        $this->actingAs($admin)->get(route('contactos.index', 'clientes'))->assertDontSee('Constructora García');
+        $this->actingAs($admin)->get(route('contactos.index', ['clientes', 'estado' => 'inactivos']))->assertSee('Constructora García');
     }
 
     public function test_validaciones_y_duplicados_de_contacto(): void
@@ -150,16 +162,16 @@ class Fase2Test extends TestCase
         ])->assertSessionHasErrors('sede_id');
     }
 
-    public function test_secretaria_no_puede_eliminar_ni_administrar_sedes(): void
+    public function test_secretaria_no_puede_desactivar_ni_administrar_sedes(): void
     {
         $secretaria = $this->usuario('Secretaría');
         $p = $this->padre();
 
         $this->actingAs($secretaria)->get(route('contactos.index', 'clientes'))->assertOk();
-        $this->actingAs($secretaria)->delete(route('contactos.destroy', ['clientes', $p]))->assertForbidden();
+        $this->actingAs($secretaria)->patch(route('contactos.estado', ['clientes', $p]))->assertForbidden();
         $this->actingAs($secretaria)->get(route('sedes.create'))->assertForbidden();
-        $this->actingAs($secretaria)->post(route('contactos.masivo', 'clientes'), ['accion' => 'eliminar', 'ids' => [$p->id]])->assertForbidden();
-        $this->assertModelExists($p);
+        $this->actingAs($secretaria)->post(route('contactos.masivo', 'clientes'), ['accion' => 'desactivar', 'ids' => [$p->id]])->assertForbidden();
+        $this->assertTrue($p->fresh()->activo);
     }
 
     public function test_acciones_masivas_con_grupos(): void
@@ -182,8 +194,12 @@ class Fase2Test extends TestCase
         ]);
         $this->assertSame(1, $grupo->contactos()->count());
 
-        $this->actingAs($admin)->post(route('contactos.masivo', 'clientes'), ['accion' => 'eliminar', 'ids' => [$a->id, $b->id]]);
-        $this->assertSame(1, Contacto::count());
+        $this->actingAs($admin)->post(route('contactos.masivo', 'clientes'), ['accion' => 'desactivar', 'ids' => [$a->id, $b->id]]);
+        $this->assertSame(3, Contacto::count());
+        $this->assertSame(1, Contacto::activos()->count());
+
+        $this->actingAs($admin)->post(route('contactos.masivo', 'clientes'), ['accion' => 'activar', 'ids' => [$a->id]]);
+        $this->assertSame(2, Contacto::activos()->count());
     }
 
     public function test_crud_de_grupos(): void
@@ -201,8 +217,14 @@ class Fase2Test extends TestCase
         ])->assertSessionHasErrors('nombre');
 
         $this->actingAs($admin)->get(route('grupos.index'))->assertOk()->assertSee('Claustro básico');
-        $this->actingAs($admin)->delete(route('grupos.destroy', $grupo))->assertRedirect(route('grupos.index'));
-        $this->assertModelMissing($grupo);
+        // Los grupos no se eliminan: el inactivo ya no se ofrece al registrar clientes
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('grupos.destroy'));
+        $this->actingAs($admin)->patch(route('grupos.estado', $grupo))->assertSessionHas('success');
+        $this->assertFalse($grupo->fresh()->activo);
+        $this->actingAs($admin)->get(route('dashboard')); // consume el mensaje de confirmación
+        $this->actingAs($admin)->get(route('grupos.index'))->assertDontSee('Claustro básico');
+        $this->actingAs($admin)->get(route('grupos.index', ['estado' => 'inactivos']))->assertSee('Claustro básico');
+        $this->actingAs($admin)->get(route('contactos.create', 'clientes'))->assertDontSee('Claustro básico');
     }
 
     public function test_plantilla_de_excel_se_descarga_con_sus_columnas(): void
