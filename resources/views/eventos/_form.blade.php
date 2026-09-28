@@ -104,6 +104,21 @@
                            class="form-control form-control-solid @error('cupo') is-invalid @enderror" placeholder="Sin límite">
                     @error('cupo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
+                @php($disenos = \App\Models\PlantillaCertificado::orderByDesc('predeterminada')->orderBy('nombre')->get())
+                @if ($disenos->isNotEmpty())
+                    <div class="col-md-8">
+                        <label for="plantilla_certificado_id" class="form-label fw-semibold">Diseño del certificado</label>
+                        <select id="plantilla_certificado_id" name="plantilla_certificado_id" class="form-select form-select-solid">
+                            <option value="">Usar el diseño predeterminado</option>
+                            @foreach ($disenos as $d)
+                                <option value="{{ $d->id }}" @selected((string) old('plantilla_certificado_id', $evento->plantilla_certificado_id) === (string) $d->id)>
+                                    {{ $d->nombre }}@if ($d->predeterminada) (predeterminado)@endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">Se usa en las constancias que se entregan al finalizar.</div>
+                    </div>
+                @endif
             </div>
         @endif
 

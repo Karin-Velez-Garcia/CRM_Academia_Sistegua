@@ -10,6 +10,7 @@ use App\Http\Controllers\GeografiaController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InvitacionController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\PlantillaCertificadoController;
 use App\Http\Controllers\PlantillaController;
 use App\Http\Controllers\RegistroQrController;
 use App\Http\Controllers\ReporteController;
@@ -123,6 +124,20 @@ Route::middleware(['auth', 'activo'])->group(function () {
         Route::get('/', 'todas')->name('todas');
         Route::post('/enviar', 'enviar')->name('enviar');
         Route::get('/{invitacion}', 'descargar')->name('descargar');
+    });
+
+    // Diseños de certificado (editor visual)
+    Route::prefix('certificados')->name('certificados.')->controller(PlantillaCertificadoController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/nuevo', 'create')->name('create');
+        Route::post('/imagenes', 'imagen')->name('imagen');
+        Route::get('/imagenes/{archivo}', 'verImagen')->name('imagen.ver');
+        Route::get('/{certificado}/editar', 'edit')->name('edit');
+        Route::put('/{certificado}', 'update')->name('update');
+        Route::get('/{certificado}/vista-previa', 'vistaPrevia')->name('vista-previa');
+        Route::post('/{certificado}/duplicar', 'duplicar')->name('duplicar');
+        Route::patch('/{certificado}/predeterminada', 'predeterminada')->name('predeterminada');
+        Route::delete('/{certificado}', 'destroy')->name('destroy');
     });
 
     // Reportes

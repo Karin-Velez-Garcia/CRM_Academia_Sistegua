@@ -6,6 +6,7 @@ use App\Mail\ConstanciaCorreo;
 use App\Models\Envio;
 use App\Models\Evento;
 use App\Models\Invitacion;
+use App\Models\PlantillaCertificado;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -85,13 +86,17 @@ class ConstanciaController extends Controller implements HasMiddleware
 
     public static function pdf(Evento $evento, Collection $invitaciones): \Barryvdh\DomPDF\PDF
     {
-        $evento->loadMissing('sede.municipio.departamento');
+        $evento->loadMissing('sede.municipio.departamento', 'plantillaCertificado');
         foreach ($invitaciones as $inv) {
             $inv->codigoConstancia();
         }
 
-        return Pdf::loadView('pdf.constancia', ['evento' => $evento, 'invitaciones' => $invitaciones])
-            ->setPaper('letter', 'landscape');
+        $plantilla = $evento->plantillaCertificado ?? PlantillaCertificado::predeterminada();
+        abort_unless($plantilla, 404, 'No hay ningún diseño de certificado configurado.');
+
+        return Pdf::loadView('pdf.constancia', [
+            'plantilla' => $plantilla, 'evento' => $evento, 'invitaciones' => $invitaciones,
+        ])->setPaper('letter', $plantilla->orientacion === PlantillaCertificado::VERTICAL ? 'portrait' : 'landscape');
     }
 
     private function asistentes(Evento $evento): Collection

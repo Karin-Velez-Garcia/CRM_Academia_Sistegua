@@ -43,10 +43,15 @@
                     @endcan
                 @endcanany
 
-                @can('eventos.ver')
+                @canany(['eventos.ver', 'certificados.ver'])
                     {!! $seccion('Formación') !!}
-                    {!! $item('eventos.index', 'eventos.*', 'ki-book-open', 'Capacitaciones', ['tipo' => 'capacitaciones']) !!}
-                @endcan
+                    @can('eventos.ver')
+                        {!! $item('eventos.index', 'eventos.*', 'ki-book-open', 'Capacitaciones', ['tipo' => 'capacitaciones']) !!}
+                    @endcan
+                    @can('certificados.ver')
+                        {!! $item('certificados.index', 'certificados.*', 'ki-award', 'Certificados') !!}
+                    @endcan
+                @endcanany
 
                 @can('campanias.ver')
                     {!! $seccion('Comunicación') !!}

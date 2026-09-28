@@ -9,6 +9,7 @@ use App\Models\Invitacion;
 use App\Models\Sede;
 use App\Models\User;
 use App\Services\InvitacionesEvento;
+use Database\Seeders\CertificadosSeeder;
 use Database\Seeders\GeografiaSeeder;
 use Database\Seeders\PlantillasSeeder;
 use Database\Seeders\RolesPermisosSeeder;
@@ -28,7 +29,7 @@ class Fase5Test extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed([GeografiaSeeder::class, SedesSeeder::class, RolesPermisosSeeder::class, PlantillasSeeder::class]);
+        $this->seed([GeografiaSeeder::class, SedesSeeder::class, RolesPermisosSeeder::class, PlantillasSeeder::class, CertificadosSeeder::class]);
         Mail::fake();
         $this->guatemala = Sede::where('nombre', 'Ciudad de Guatemala')->firstOrFail();
         $this->guatemala->update(['direccion' => 'Barrio El Centro, Sanarate']);

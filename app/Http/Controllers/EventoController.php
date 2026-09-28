@@ -317,6 +317,7 @@ class EventoController extends Controller implements HasMiddleware
             'enlace' => ['required_if:modalidad,'.Evento::VIRTUAL, 'nullable', 'url:https,http', 'max:500'],
             'facilitador' => [$esCapacitacion ? 'nullable' : 'prohibited', 'string', 'max:150'],
             'cupo' => [$esCapacitacion ? 'nullable' : 'prohibited', 'integer', 'min:1', 'max:5000'],
+            'plantilla_certificado_id' => ['nullable', Rule::exists('plantillas_certificado', 'id')],
             'para_todos' => ['boolean'],
             'recordatorio_automatico' => ['boolean'],
             'grupos' => ['array'],
@@ -354,6 +355,7 @@ class EventoController extends Controller implements HasMiddleware
             'enlace' => $datos['modalidad'] === Evento::VIRTUAL ? $datos['enlace'] : null,
             'facilitador' => $esCapacitacion ? ($datos['facilitador'] ?? null) : null,
             'cupo' => $esCapacitacion ? ($datos['cupo'] ?? null) : null,
+            'plantilla_certificado_id' => $datos['plantilla_certificado_id'] ?? null,
             'para_todos' => $paraTodos,
             'recordatorio_automatico' => $request->boolean('recordatorio_automatico', true),
         ];

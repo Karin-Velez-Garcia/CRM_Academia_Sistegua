@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             SedesSeeder::class,
             RolesPermisosSeeder::class,
             PlantillasSeeder::class,
+            CertificadosSeeder::class,
         ]);
 
         // Usuario administrador inicial: cambie la contraseña después del primer ingreso.

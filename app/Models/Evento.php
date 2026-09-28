@@ -33,6 +33,7 @@ class Evento extends Model
     protected $fillable = [
         'tipo', 'titulo', 'descripcion', 'sede_id', 'modalidad', 'inicio', 'fin',
         'lugar', 'enlace', 'facilitador', 'cupo', 'para_todos', 'recordatorio_automatico', 'creado_por',
+        'plantilla_certificado_id',
     ];
 
     protected $attributes = ['para_todos' => false, 'recordatorio_automatico' => true];
@@ -173,6 +174,12 @@ class Evento extends Model
     public function autor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creado_por');
+    }
+
+    /** Diseño de certificado propio; si es null se usa el predeterminado. */
+    public function plantillaCertificado(): BelongsTo
+    {
+        return $this->belongsTo(PlantillaCertificado::class, 'plantilla_certificado_id');
     }
 
     public function invitaciones(): HasMany

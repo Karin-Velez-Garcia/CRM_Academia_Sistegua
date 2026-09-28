@@ -21,6 +21,7 @@ class RolesPermisosSeeder extends Seeder
         'contactos' => ['ver', 'crear', 'editar', 'eliminar', 'importar'],
         'eventos' => ['ver', 'crear', 'editar', 'eliminar', 'asistencia'],
         'campanias' => ['ver', 'crear', 'editar', 'eliminar', 'enviar'],
+        'certificados' => ['ver', 'crear', 'editar', 'eliminar'],
         'reportes' => ['ver', 'exportar'],
     ];
 
@@ -33,6 +34,7 @@ class RolesPermisosSeeder extends Seeder
             'contactos.ver', 'contactos.crear', 'contactos.editar', 'contactos.eliminar', 'contactos.importar',
             'eventos.ver', 'eventos.crear', 'eventos.editar', 'eventos.eliminar', 'eventos.asistencia',
             'campanias.ver', 'campanias.crear', 'campanias.editar', 'campanias.eliminar', 'campanias.enviar',
+            'certificados.ver', 'certificados.crear', 'certificados.editar',
             'reportes.ver', 'reportes.exportar',
         ],
         // Mantiene los contactos al día, envía las convocatorias y toma asistencia
@@ -42,6 +44,7 @@ class RolesPermisosSeeder extends Seeder
             'contactos.ver', 'contactos.crear', 'contactos.editar', 'contactos.importar',
             'eventos.ver', 'eventos.asistencia',
             'campanias.ver', 'campanias.crear', 'campanias.enviar',
+            'certificados.ver',
             'reportes.ver',
         ],
     ];
