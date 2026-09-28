@@ -1,0 +1,85 @@
+/* Ajustes propios sobre la plantilla (sin el JavaScript de la plantilla original) */
+
+/* Paleta institucional: azul marino + dorado (acento ya presente en --bs-warning) */
+:root, [data-bs-theme="light"] {
+    --bs-primary: #1E3A70;
+    --bs-primary-active: #142850;
+    --bs-primary-light: #E8EDF6;
+    --bs-primary-rgb: 30, 58, 112;
+    --bs-link-color: #1E3A70;
+    --bs-link-color-rgb: 30, 58, 112;
+    --bs-link-hover-color: #142850;
+    --bs-link-hover-color-rgb: 20, 40, 80;
+}
+[data-bs-theme="dark"] {
+    --bs-primary: #5578B8;
+    --bs-primary-active: #7291CC;
+    --bs-primary-light: #1B2740;
+    --bs-primary-rgb: 85, 120, 184;
+    --bs-link-color: #7291CC;
+    --bs-link-color-rgb: 114, 145, 204;
+    --bs-link-hover-color: #93ABDA;
+    --bs-link-hover-color-rgb: 147, 171, 218;
+}
+
+/* El fondo del menú lateral viene codificado en color fijo (#0d0e12) dentro de
+   style.bundle.css, con más especificidad que una regla de :root; se usa el id del
+   contenedor (#kt_app_sidebar) para poder pintarlo de azul marino sin !important. */
+#kt_app_sidebar { background-color: #1E3A70; }
+#kt_app_sidebar .menu-item.here > .menu-link,
+#kt_app_sidebar .menu-item.here > .menu-link .menu-title,
+#kt_app_sidebar .menu-item.here > .menu-link .menu-icon,
+#kt_app_sidebar .menu-item.here > .menu-link .menu-icon i,
+#kt_app_sidebar .menu-item.here > .menu-link .menu-icon .svg-icon {
+    color: #F6C000;
+}
+
+/* Acento dorado bajo el logo del menú lateral, como en la identidad institucional */
+.app-sidebar-logo { border-bottom: 3px solid var(--bs-warning); }
+
+.sidebar-scroll { max-height: calc(100vh - 110px); overflow-y: auto; scrollbar-width: thin; }
+.app-sidebar .menu-link.disabled { cursor: default; pointer-events: none; }
+.app-sidebar-logo { display: flex; align-items: center; justify-content: space-between; }
+
+/* Menú lateral como panel deslizante en pantallas pequeñas */
+@media (max-width: 991.98px) {
+    #kt_app_sidebar {
+        display: flex !important;
+        position: fixed; top: 0; bottom: 0; left: -280px;
+        width: 265px; z-index: 110;
+        transition: left .25s ease;
+    }
+    body.sidebar-abierto #kt_app_sidebar { left: 0; }
+    .sidebar-overlay {
+        position: fixed; inset: 0; background: rgba(0, 0, 0, .35);
+        z-index: 109; display: none;
+    }
+    body.sidebar-abierto .sidebar-overlay { display: block; }
+    .sidebar-scroll { max-height: calc(100vh - 160px); }
+}
+@media (min-width: 992px) { .sidebar-overlay { display: none !important; } }
+
+/* Ícono del botón de tema */
+.tema-oscuro { display: none; }
+[data-bs-theme="dark"] .tema-oscuro { display: inline-block; }
+[data-bs-theme="dark"] .tema-claro { display: none; }
+
+.menu-usuario { min-width: 290px; }
+.menu-usuario .dropdown-item { font-weight: 500; color: var(--bs-gray-700); }
+.menu-usuario .dropdown-item:hover { color: var(--bs-primary); background: var(--bs-gray-100); }
+
+/* Tabla de permisos */
+.tabla-permisos th, .tabla-permisos td { vertical-align: middle; }
+.tabla-permisos .form-check { justify-content: center; display: flex; }
+
+/* Pantalla de acceso */
+.auth-aside { background-size: cover; background-position: center; }
+
+/* Logo del colegio */
+.logo-login { height: 150px; width: auto; display: block; }
+@media (max-width: 991.98px) { .logo-login { height: 100px; } }
+
+/* Lista de eventos */
+.evento-fila { color: inherit; transition: background-color .15s; }
+.evento-fila:hover { background-color: var(--bs-gray-100); }
+.evento-fecha { min-width: 76px; }
